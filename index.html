@@ -2,25 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q2 FY26 Revenue Waterfall - All Offices</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Q2 FY26 Revenue Waterfall</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; }
         .card { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
-        .card-header { padding: 1.5rem; border-bottom: 1px solid #e5e7eb; }
-        .card-content { padding: 1.5rem; }
-        .btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; cursor: pointer; border: none; }
+        .card-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; }
+        .card-content { padding: 1rem; }
+        .btn { padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; cursor: pointer; border: none; font-size: 0.875rem; }
         .btn-active { background: #2563eb; color: white; }
         .btn-inactive { background: white; color: #374151; }
         .btn-inactive:hover { background: #f3f4f6; }
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1rem; }
         #dashboard { display: none; }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .card-header { padding: 0.75rem; }
+            .card-content { padding: 0.75rem; }
+            .btn { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+            h1 { font-size: 1.5rem !important; }
+            h2 { font-size: 1.125rem !important; }
+            .text-2xl { font-size: 1.25rem !important; }
+            table { font-size: 0.75rem; }
+            th, td { padding: 0.5rem !important; }
+        }
+        
+        /* Scrollable tables on mobile */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        /* Responsive grid */
+        @media (max-width: 640px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+            .btn-group { flex-wrap: wrap; }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <div id="login-screen">
-        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-md w-full">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Revenue Dashboard Login</h2>
+        <div class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-md">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 text-center">Revenue Dashboard Login</h2>
             <input type="password" id="password-input" placeholder="Enter password" class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" onkeypress="if(event.key==='Enter') checkPassword()">
             <button onclick="checkPassword()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Access Dashboard</button>
             <p id="error-msg" class="text-red-600 text-sm mt-2 text-center" style="display:none;">Incorrect password</p>
@@ -28,48 +51,48 @@
     </div>
     
     <div id="dashboard">
-        <div class="w-full max-w-7xl mx-auto p-6">
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Q2 FY26 Revenue Waterfall - All Offices</h1>
-                <p class="text-gray-600">Weekly Update: November 18, 2025</p>
+        <div class="w-full max-w-7xl mx-auto p-3 sm:p-6">
+            <div class="mb-6">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Q2 FY26 Revenue Waterfall</h1>
+                <p class="text-sm sm:text-base text-gray-600">Weekly Update: November 18, 2025</p>
             </div>
 
-            <div class="mb-4 flex gap-2">
-                <button class="btn btn-active" id="btn-group" onclick="selectOffice('group')">🌐 Group Total</button>
+            <div class="mb-4 flex gap-2 btn-group flex-wrap">
+                <button class="btn btn-active" id="btn-group" onclick="selectOffice('group')">🌐 Group</button>
                 <button class="btn btn-inactive" id="btn-melbourne" onclick="selectOffice('melbourne')">Melbourne</button>
                 <button class="btn btn-inactive" id="btn-brisbane" onclick="selectOffice('brisbane')">Brisbane</button>
                 <button class="btn btn-inactive" id="btn-sydney" onclick="selectOffice('sydney')">Sydney</button>
             </div>
 
-            <div class="mb-6 flex gap-2">
+            <div class="mb-6 flex gap-2 btn-group flex-wrap">
                 <button class="btn btn-active" id="btn-oct" onclick="selectMonth('oct')" style="background: #7c3aed; color: white;">October</button>
                 <button class="btn btn-inactive" id="btn-nov" onclick="selectMonth('nov')">November</button>
                 <button class="btn btn-inactive" id="btn-dec" onclick="selectMonth('dec')">December</button>
                 <button class="btn btn-inactive" id="btn-q2" onclick="selectMonth('q2')">Q2 Total</button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="summaryCards"></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 summary-grid" id="summaryCards"></div>
 
-            <div class="card mb-8">
+            <div class="card mb-6">
                 <div class="card-header text-white" style="background: linear-gradient(to right, #2563eb, #7c3aed);">
-                    <h2 class="text-xl font-bold" id="chartTitle">October - Group Total Revenue Waterfall</h2>
-                    <p class="text-blue-100 text-sm mt-1">Confirmed + Unconfirmed + Gap = Target</p>
+                    <h2 class="text-lg sm:text-xl font-bold" id="chartTitle">October - Group Total</h2>
+                    <p class="text-blue-100 text-xs sm:text-sm mt-1">Confirmed + Unconfirmed + Gap = Target</p>
                 </div>
                 <div class="card-content">
-                    <div id="waterfallChart" style="height: 500px; width: 100%;"></div>
-                    <div class="mt-6 bg-blue-50 p-4 rounded-lg">
-                        <h3 class="font-bold text-blue-900 mb-2">Waterfall Breakdown:</h3>
-                        <div class="grid grid-cols-2 gap-4 text-sm" id="waterfallBreakdown"></div>
+                    <div id="waterfallChart" style="height: 350px; width: 100%; overflow-x: auto;"></div>
+                    <div class="mt-4 bg-blue-50 p-3 rounded-lg">
+                        <h3 class="font-bold text-blue-900 mb-2 text-sm sm:text-base">Waterfall Breakdown:</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm" id="waterfallBreakdown"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="card mb-8" id="teamBreakdown" style="display: none;">
+            <div class="card mb-6" id="teamBreakdown" style="display: none;">
                 <div class="card-header text-white" style="background: linear-gradient(to right, #4f46e5, #7c3aed);">
-                    <h2 class="text-xl font-bold" id="teamBreakdownTitle">Melbourne Team Breakdown</h2>
+                    <h2 class="text-lg sm:text-xl font-bold" id="teamBreakdownTitle">Melbourne Team Breakdown</h2>
                 </div>
                 <div class="card-content">
-                    <div class="overflow-x-auto">
+                    <div class="table-container">
                         <table class="w-full" id="teamTable"></table>
                     </div>
                 </div>
@@ -77,10 +100,10 @@
 
             <div class="card">
                 <div class="card-header text-white" style="background: linear-gradient(to right, #059669, #0d9488);">
-                    <h2 class="text-xl font-bold" id="comparisonTitle">Office Breakdown</h2>
+                    <h2 class="text-lg sm:text-xl font-bold" id="comparisonTitle">Office Breakdown</h2>
                 </div>
                 <div class="card-content">
-                    <div class="overflow-x-auto">
+                    <div class="table-container">
                         <table class="w-full" id="comparisonTable"></table>
                     </div>
                 </div>
@@ -110,7 +133,7 @@ if (sessionStorage.getItem('authenticated') === 'true') {
 
 document.getElementById('password-input')?.focus();
 
-const data = {"melbourne":{"oct":{"month":"Oct","target":405000,"confirmed":370903.9633333333,"unconfirmed":0,"gap":34096.03666666668,"teams":{"dt":{"confirmed":147547.5833333333,"unconfirmed":0,"target":155000},"gg":{"confirmed":138055.38,"unconfirmed":0,"target":140000},"sc":{"confirmed":85301,"unconfirmed":0,"target":110000}}},"nov":{"month":"Nov","target":400000,"confirmed":359326.07333333336,"unconfirmed":15948,"gap":24725.926666666637,"teams":{"dt":{"confirmed":132930.25,"unconfirmed":15948,"target":150000},"gg":{"confirmed":136245.49,"unconfirmed":0,"target":120000},"sc":{"confirmed":90150.33333333334,"unconfirmed":0,"target":130000}}},"dec":{"month":"Dec","target":325000,"confirmed":228052.96333333335,"unconfirmed":28400,"gap":68547.03666666665,"teams":{"dt":{"confirmed":84418,"unconfirmed":18400,"target":140000},"gg":{"confirmed":57161.630000000005,"unconfirmed":10000,"target":60000},"sc":{"confirmed":86473.33333333334,"unconfirmed":0,"target":125000}}},"q2":{"month":"Q2 Total","target":1130000,"confirmed":958283,"unconfirmed":44348,"gap":127369,"teams":{"dt":{"confirmed":364895.8333333333,"unconfirmed":34348,"target":445000},"gg":{"confirmed":331462.5,"unconfirmed":10000,"target":320000},"sc":{"confirmed":261924.6666666667,"unconfirmed":0,"target":365000}}}},"brisbane":{"oct":{"month":"Oct","target":115000,"confirmed":114965.64,"unconfirmed":0,"gap":34.36000000000058},"nov":{"month":"Nov","target":100000,"confirmed":86375.64,"unconfirmed":0,"gap":13624.36},"dec":{"month":"Dec","target":75000,"confirmed":72551.64000000001,"unconfirmed":0,"gap":2448.359999999986},"q2":{"month":"Q2 Total","target":290000,"confirmed":273892.92000000004,"unconfirmed":0,"gap":16107.079999999958}},"sydney":{"oct":{"month":"Oct","target":36000,"confirmed":31277.18,"unconfirmed":0,"gap":4722.82},"nov":{"month":"Nov","target":51000,"confirmed":35500,"unconfirmed":0,"gap":15500},"dec":{"month":"Dec","target":40000,"confirmed":34400,"unconfirmed":0,"gap":5600},"q2":{"month":"Q2 Total","target":127000,"confirmed":101177.18,"unconfirmed":0,"gap":25822.820000000007}},"group":{"oct":{"month":"Oct","target":556000,"confirmed":517146.7833333333,"unconfirmed":0,"gap":38853.216666666674},"nov":{"month":"Nov","target":551000,"confirmed":481201.7133333334,"unconfirmed":15948,"gap":53850.28666666662},"dec":{"month":"Dec","target":440000,"confirmed":335004.6033333334,"unconfirmed":28400,"gap":76595.39666666661},"q2":{"month":"Q2 Total","target":1547000,"confirmed":1333353.0999999999,"unconfirmed":44348,"gap":169298.90000000014}}};
+const data = {"melbourne":{"oct":{"month":"Oct","target":405000,"confirmed":370903.9633333333,"unconfirmed":0,"gap":34096.03666666668,"teams":{"dt":{"confirmed":147547.5833333333,"unconfirmed":0,"target":155000},"gg":{"confirmed":138055.38,"unconfirmed":0,"target":140000},"sc":{"confirmed":85301,"unconfirmed":0,"target":110000}}},"nov":{"month":"Nov","target":400000,"confirmed":359326.0733333333,"unconfirmed":15948,"gap":24725.926666666695,"teams":{"dt":{"confirmed":132930.25,"unconfirmed":15948,"target":150000},"gg":{"confirmed":136245.49,"unconfirmed":0,"target":120000},"sc":{"confirmed":90150.33333333333,"unconfirmed":0,"target":130000}}},"dec":{"month":"Dec","target":325000,"confirmed":228052.96333333335,"unconfirmed":26400,"gap":70547.03666666665,"teams":{"dt":{"confirmed":84418,"unconfirmed":18400,"target":140000},"gg":{"confirmed":57161.630000000005,"unconfirmed":8000,"target":60000},"sc":{"confirmed":86473.33333333334,"unconfirmed":0,"target":125000}}},"q2":{"month":"Q2 Total","target":1130000,"confirmed":958283,"unconfirmed":42348,"gap":129369,"teams":{"dt":{"confirmed":364895.8333333333,"unconfirmed":34348,"target":445000},"gg":{"confirmed":331462.5,"unconfirmed":8000,"target":320000},"sc":{"confirmed":261924.66666666666,"unconfirmed":0,"target":365000}}}},"brisbane":{"oct":{"month":"Oct","target":115000,"confirmed":114965.64,"unconfirmed":0,"gap":34.36000000000058},"nov":{"month":"Nov","target":100000,"confirmed":86375.64,"unconfirmed":0,"gap":13624.36},"dec":{"month":"Dec","target":75000,"confirmed":72551.64000000001,"unconfirmed":0,"gap":2448.359999999986},"q2":{"month":"Q2 Total","target":290000,"confirmed":273892.92000000004,"unconfirmed":0,"gap":16107.079999999958}},"sydney":{"oct":{"month":"Oct","target":36000,"confirmed":31277.18,"unconfirmed":0,"gap":4722.82},"nov":{"month":"Nov","target":51000,"confirmed":35500,"unconfirmed":0,"gap":15500},"dec":{"month":"Dec","target":40000,"confirmed":34400,"unconfirmed":0,"gap":5600},"q2":{"month":"Q2 Total","target":127000,"confirmed":101177.18,"unconfirmed":0,"gap":25822.820000000007}},"group":{"oct":{"month":"Oct","target":556000,"confirmed":517146.7833333333,"unconfirmed":0,"gap":38853.216666666674},"nov":{"month":"Nov","target":551000,"confirmed":481201.7133333333,"unconfirmed":15948,"gap":53850.28666666668},"dec":{"month":"Dec","target":440000,"confirmed":335004.6033333334,"unconfirmed":26400,"gap":78595.39666666661},"q2":{"month":"Q2 Total","target":1547000,"confirmed":1333353.0999999999,"unconfirmed":42348,"gap":171298.90000000014}}};
 let currentOffice = 'group';
 let currentMonth = 'oct';
 
@@ -138,14 +161,23 @@ function selectMonth(month) {
 
 function drawWaterfall(d) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 800 500');
-    const h = 400, w = 100, g = 50, max = d.target;
-    const getY = v => 50 + h - (v/max*h), getH = v => v/max*h;
+    const isMobile = window.innerWidth < 640;
+    const viewBoxWidth = isMobile ? 600 : 800;
+    svg.setAttribute('viewBox', '0 0 ' + viewBoxWidth + ' 400');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.style.width = '100%';
+    svg.style.height = 'auto';
+    
+    const h = 300, w = isMobile ? 60 : 100, g = isMobile ? 30 : 50, max = d.target;
+    const getY = v => 40 + h - (v/max*h), getH = v => v/max*h;
     const cy = getY(d.confirmed), ch = getH(d.confirmed);
     const uy = getY(d.confirmed + d.unconfirmed), uh = getH(d.unconfirmed);
     const gy = getY(d.target), gh = getH(d.gap);
-    const x1=50, x2=x1+w+g, x3=x2+w+g, x4=x3+w+g;
-    svg.innerHTML = '<line x1="30" y1="50" x2="750" y2="50" stroke="#e5e7eb" stroke-width="1"/><line x1="30" y1="450" x2="750" y2="450" stroke="#e5e7eb" stroke-width="2"/><line x1="30" y1="50" x2="750" y2="50" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/><text x="755" y="55" font-size="12" fill="#ef4444" font-weight="bold">Target: ' + formatCurrency(d.target) + '</text><rect x="' + x1 + '" y="' + cy + '" width="' + w + '" height="' + ch + '" fill="#10b981" stroke="#059669" stroke-width="2"/><text x="' + (x1+w/2) + '" y="' + (cy-10) + '" font-size="14" font-weight="bold" fill="#059669" text-anchor="middle">' + formatCurrency(d.confirmed) + '</text><text x="' + (x1+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">Confirmed</text><line x1="' + (x1+w) + '" y1="' + cy + '" x2="' + x2 + '" y2="' + cy + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>' + (d.unconfirmed>0?'<rect x="' + x2 + '" y="' + uy + '" width="' + w + '" height="' + uh + '" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/><text x="' + (x2+w/2) + '" y="' + (uy-10) + '" font-size="14" font-weight="bold" fill="#f59e0b" text-anchor="middle">' + formatCurrency(d.unconfirmed) + '</text>':'') + '<rect x="' + x2 + '" y="' + cy + '" width="' + w + '" height="' + ch + '" fill="#10b981" opacity="0.3"/><text x="' + (x2+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">+ Unconfirmed</text><line x1="' + (x2+w) + '" y1="' + (d.unconfirmed>0?uy:cy) + '" x2="' + x3 + '" y2="' + (d.unconfirmed>0?uy:cy) + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="' + x3 + '" y="' + gy + '" width="' + w + '" height="' + gh + '" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,4"/><text x="' + (x3+w/2) + '" y="' + (gy+gh/2) + '" font-size="14" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(d.gap) + '</text><rect x="' + x3 + '" y="' + cy + '" width="' + w + '" height="' + (ch+uh) + '" fill="#10b981" opacity="0.2"/><text x="' + (x3+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">Gap to Close</text><line x1="' + (x3+w) + '" y1="50" x2="' + x4 + '" y2="50" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="' + x4 + '" y="50" width="' + w + '" height="' + h + '" fill="none" stroke="#ef4444" stroke-width="3"/><text x="' + (x4+w/2) + '" y="250" font-size="14" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(d.target) + '</text><text x="' + (x4+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">Target</text>';
+    const x1=40, x2=x1+w+g, x3=x2+w+g, x4=x3+w+g;
+    const fontSize = isMobile ? 10 : 14;
+    const labelFontSize = isMobile ? 9 : 13;
+    
+    svg.innerHTML = '<line x1="30" y1="40" x2="' + (viewBoxWidth-30) + '" y2="40" stroke="#e5e7eb" stroke-width="1"/><line x1="30" y1="' + (h+40) + '" x2="' + (viewBoxWidth-30) + '" y2="' + (h+40) + '" stroke="#e5e7eb" stroke-width="2"/><line x1="30" y1="40" x2="' + (viewBoxWidth-30) + '" y2="40" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/><text x="' + (viewBoxWidth-25) + '" y="45" font-size="' + (fontSize-2) + '" fill="#ef4444" font-weight="bold" text-anchor="end">Target: ' + formatCurrency(d.target) + '</text><rect x="' + x1 + '" y="' + cy + '" width="' + w + '" height="' + ch + '" fill="#10b981" stroke="#059669" stroke-width="2"/><text x="' + (x1+w/2) + '" y="' + (cy-5) + '" font-size="' + fontSize + '" font-weight="bold" fill="#059669" text-anchor="middle">' + formatCurrency(d.confirmed) + '</text><text x="' + (x1+w/2) + '" y="' + (h+60) + '" font-size="' + labelFontSize + '" font-weight="bold" text-anchor="middle">Confirmed</text><line x1="' + (x1+w) + '" y1="' + cy + '" x2="' + x2 + '" y2="' + cy + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>' + (d.unconfirmed>0?'<rect x="' + x2 + '" y="' + uy + '" width="' + w + '" height="' + uh + '" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/><text x="' + (x2+w/2) + '" y="' + (uy-5) + '" font-size="' + fontSize + '" font-weight="bold" fill="#f59e0b" text-anchor="middle">' + formatCurrency(d.unconfirmed) + '</text>':'') + '<rect x="' + x2 + '" y="' + cy + '" width="' + w + '" height="' + ch + '" fill="#10b981" opacity="0.3"/><text x="' + (x2+w/2) + '" y="' + (h+60) + '" font-size="' + labelFontSize + '" font-weight="bold" text-anchor="middle">+ Unconf.</text><line x1="' + (x2+w) + '" y1="' + (d.unconfirmed>0?uy:cy) + '" x2="' + x3 + '" y2="' + (d.unconfirmed>0?uy:cy) + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="' + x3 + '" y="' + gy + '" width="' + w + '" height="' + gh + '" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,4"/><text x="' + (x3+w/2) + '" y="' + (gy+gh/2) + '" font-size="' + fontSize + '" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(d.gap) + '</text><rect x="' + x3 + '" y="' + cy + '" width="' + w + '" height="' + (ch+uh) + '" fill="#10b981" opacity="0.2"/><text x="' + (x3+w/2) + '" y="' + (h+60) + '" font-size="' + labelFontSize + '" font-weight="bold" text-anchor="middle">Gap</text><line x1="' + (x3+w) + '" y1="40" x2="' + x4 + '" y2="40" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="' + x4 + '" y="40" width="' + w + '" height="' + h + '" fill="none" stroke="#ef4444" stroke-width="3"/><text x="' + (x4+w/2) + '" y="' + (h/2+40) + '" font-size="' + fontSize + '" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(d.target) + '</text><text x="' + (x4+w/2) + '" y="' + (h+60) + '" font-size="' + labelFontSize + '" font-weight="bold" text-anchor="middle">Target</text>';
     return svg;
 }
 
@@ -156,8 +188,8 @@ function updateDisplay() {
         return;
     }
     const oName = currentOffice === 'group' ? 'Group Total' : currentOffice.charAt(0).toUpperCase() + currentOffice.slice(1);
-    document.getElementById('chartTitle').textContent = d.month + ' - ' + oName + ' Revenue Waterfall';
-    document.getElementById('summaryCards').innerHTML = '<div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Target</div><div class="text-2xl font-bold text-gray-900">' + formatCurrency(d.target) + '</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Confirmed</div><div class="text-2xl font-bold text-green-600">' + formatCurrency(d.confirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.confirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Unconfirmed</div><div class="text-2xl font-bold text-yellow-600">' + formatCurrency(d.unconfirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Gap</div><div class="text-2xl font-bold text-red-600">' + formatCurrency(d.gap) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.gap/d.target)*100).toFixed(1) + '%</div></div></div>';
+    document.getElementById('chartTitle').textContent = d.month + ' - ' + oName;
+    document.getElementById('summaryCards').innerHTML = '<div class="card"><div class="card-content pt-4"><div class="text-xs text-gray-600 mb-1">Target</div><div class="text-lg sm:text-2xl font-bold text-gray-900">' + formatCurrency(d.target) + '</div></div></div><div class="card"><div class="card-content pt-4"><div class="text-xs text-gray-600 mb-1">Confirmed</div><div class="text-lg sm:text-2xl font-bold text-green-600">' + formatCurrency(d.confirmed) + '</div><div class="text-xs text-gray-500 mt-1">' + ((d.confirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-4"><div class="text-xs text-gray-600 mb-1">Unconfirmed</div><div class="text-lg sm:text-2xl font-bold text-yellow-600">' + formatCurrency(d.unconfirmed) + '</div><div class="text-xs text-gray-500 mt-1">' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-4"><div class="text-xs text-gray-600 mb-1">Gap</div><div class="text-lg sm:text-2xl font-bold text-red-600">' + formatCurrency(d.gap) + '</div><div class="text-xs text-gray-500 mt-1">' + ((d.gap/d.target)*100).toFixed(1) + '%</div></div></div>';
     document.getElementById('waterfallChart').innerHTML = '';
     document.getElementById('waterfallChart').appendChild(drawWaterfall(d));
     document.getElementById('waterfallBreakdown').innerHTML = '<div><div class="text-gray-700">Confirmed:</div><div class="font-bold text-green-700">' + formatCurrency(d.confirmed) + ' (' + ((d.confirmed/d.target)*100).toFixed(1) + '%)</div></div><div><div class="text-gray-700">Unconfirmed:</div><div class="font-bold text-yellow-700">' + formatCurrency(d.unconfirmed) + ' (' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%)</div></div><div><div class="text-gray-700">Total Pipeline:</div><div class="font-bold text-blue-700">' + formatCurrency(d.confirmed+d.unconfirmed) + ' (' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(1) + '%)</div></div><div><div class="text-gray-700">Gap:</div><div class="font-bold text-red-700">' + formatCurrency(d.gap) + ' (' + ((d.gap/d.target)*100).toFixed(1) + '%)</div></div>';
@@ -166,28 +198,30 @@ function updateDisplay() {
         document.getElementById('teamBreakdown').style.display='block';
         document.getElementById('teamBreakdownTitle').textContent='Melbourne Team - ' + d.month;
         const teams=[{name:'Dream Team',key:'dt'},{name:'Go-Getters',key:'gg'},{name:'Social & Content',key:'sc'}];
-        let html='<thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left">Team</th><th class="px-4 py-3 text-right">Target</th><th class="px-4 py-3 text-right">Confirmed</th><th class="px-4 py-3 text-right">Unconfirmed</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3 text-right">Gap</th><th class="px-4 py-3 text-center">%</th></tr></thead><tbody>';
+        let html='<thead class="bg-gray-100"><tr><th class="px-2 py-2 text-left text-xs sm:text-sm">Team</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Target</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Confirmed</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Unconf.</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Total</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Gap</th><th class="px-2 py-2 text-center text-xs sm:text-sm">%</th></tr></thead><tbody>';
         teams.forEach(t=>{
             const tm=d.teams[t.key],tot=tm.confirmed+tm.unconfirmed,gap=tm.target-tot,pct=(tot/tm.target*100).toFixed(0);
             const badge=pct>=90?'bg-green-100 text-green-800':pct>=75?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800';
-            html+='<tr class="border-b"><td class="px-4 py-3">' + t.name + '</td><td class="px-4 py-3 text-right">' + formatCurrency(tm.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(tm.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(tm.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(tot) + '</td><td class="px-4 py-3 text-right text-red-600">' + formatCurrency(gap) + '</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ' + badge + '">' + pct + '%</span></td></tr>';
+            html+='<tr class="border-b"><td class="px-2 py-2 text-xs sm:text-sm">' + t.name + '</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(tm.target) + '</td><td class="px-2 py-2 text-right text-green-700 text-xs sm:text-sm">' + formatCurrency(tm.confirmed) + '</td><td class="px-2 py-2 text-right text-yellow-700 text-xs sm:text-sm">' + formatCurrency(tm.unconfirmed) + '</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(tot) + '</td><td class="px-2 py-2 text-right text-red-600 text-xs sm:text-sm">' + formatCurrency(gap) + '</td><td class="px-2 py-2 text-center"><span class="px-2 py-1 rounded text-xs ' + badge + '">' + pct + '%</span></td></tr>';
         });
-        html+='<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">TOTAL</td><td class="px-4 py-3 text-right">' + formatCurrency(d.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(d.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(d.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(d.confirmed+d.unconfirmed) + '</td><td class="px-4 py-3 text-right text-red-700">' + formatCurrency(d.gap) + '</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0) + '%</span></td></tr></tbody>';
+        html+='<tr class="bg-blue-50 font-bold"><td class="px-2 py-2 text-xs sm:text-sm">TOTAL</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(d.target) + '</td><td class="px-2 py-2 text-right text-green-700 text-xs sm:text-sm">' + formatCurrency(d.confirmed) + '</td><td class="px-2 py-2 text-right text-yellow-700 text-xs sm:text-sm">' + formatCurrency(d.unconfirmed) + '</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(d.confirmed+d.unconfirmed) + '</td><td class="px-2 py-2 text-right text-red-700 text-xs sm:text-sm">' + formatCurrency(d.gap) + '</td><td class="px-2 py-2 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0) + '%</span></td></tr></tbody>';
         document.getElementById('teamTable').innerHTML=html;
     }else{document.getElementById('teamBreakdown').style.display='none';}
     
     if(currentOffice==='group'){
         document.getElementById('comparisonTitle').textContent='Office Breakdown - ' + d.month;
-        let html='<thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left">Office</th><th class="px-4 py-3 text-right">Target</th><th class="px-4 py-3 text-right">Confirmed</th><th class="px-4 py-3 text-right">Unconfirmed</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3 text-right">Gap</th><th class="px-4 py-3 text-center">%</th><th class="px-4 py-3 text-right">% of Group</th></tr></thead><tbody>';
+        let html='<thead class="bg-gray-100"><tr><th class="px-2 py-2 text-left text-xs sm:text-sm">Office</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Target</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Confirmed</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Unconf.</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Total</th><th class="px-2 py-2 text-right text-xs sm:text-sm">Gap</th><th class="px-2 py-2 text-center text-xs sm:text-sm">%</th><th class="px-2 py-2 text-right text-xs sm:text-sm">% of Group</th></tr></thead><tbody>';
         ['melbourne','brisbane','sydney'].forEach(o=>{
             const od=data[o][currentMonth],pct=((od.confirmed+od.unconfirmed)/od.target*100).toFixed(0),pctG=(od.target/d.target*100).toFixed(1);
             const badge=pct>=90?'bg-green-100 text-green-800':pct>=75?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800';
-            html+='<tr class="border-b"><td class="px-4 py-3 capitalize">' + o + '</td><td class="px-4 py-3 text-right">' + formatCurrency(od.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(od.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(od.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(od.confirmed+od.unconfirmed) + '</td><td class="px-4 py-3 text-right text-red-600">' + formatCurrency(od.gap) + '</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ' + badge + '">' + pct + '%</span></td><td class="px-4 py-3 text-right">' + pctG + '%</td></tr>';
+            html+='<tr class="border-b"><td class="px-2 py-2 capitalize text-xs sm:text-sm">' + o + '</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(od.target) + '</td><td class="px-2 py-2 text-right text-green-700 text-xs sm:text-sm">' + formatCurrency(od.confirmed) + '</td><td class="px-2 py-2 text-right text-yellow-700 text-xs sm:text-sm">' + formatCurrency(od.unconfirmed) + '</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(od.confirmed+od.unconfirmed) + '</td><td class="px-2 py-2 text-right text-red-600 text-xs sm:text-sm">' + formatCurrency(od.gap) + '</td><td class="px-2 py-2 text-center"><span class="px-2 py-1 rounded text-xs ' + badge + '">' + pct + '%</span></td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + pctG + '%</td></tr>';
         });
-        html+='<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">GROUP TOTAL</td><td class="px-4 py-3 text-right">' + formatCurrency(d.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(d.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(d.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(d.confirmed+d.unconfirmed) + '</td><td class="px-4 py-3 text-right text-red-700">' + formatCurrency(d.gap) + '</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0) + '%</span></td><td class="px-4 py-3 text-right">100%</td></tr></tbody>';
+        html+='<tr class="bg-blue-50 font-bold"><td class="px-2 py-2 text-xs sm:text-sm">GROUP TOTAL</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(d.target) + '</td><td class="px-2 py-2 text-right text-green-700 text-xs sm:text-sm">' + formatCurrency(d.confirmed) + '</td><td class="px-2 py-2 text-right text-yellow-700 text-xs sm:text-sm">' + formatCurrency(d.unconfirmed) + '</td><td class="px-2 py-2 text-right text-xs sm:text-sm">' + formatCurrency(d.confirmed+d.unconfirmed) + '</td><td class="px-2 py-2 text-right text-red-700 text-xs sm:text-sm">' + formatCurrency(d.gap) + '</td><td class="px-2 py-2 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0) + '%</span></td><td class="px-2 py-2 text-right text-xs sm:text-sm">100%</td></tr></tbody>';
         document.getElementById('comparisonTable').innerHTML=html;
     }
 }
+
+window.addEventListener('resize', updateDisplay);
 updateDisplay();
     </script>
 </body>
