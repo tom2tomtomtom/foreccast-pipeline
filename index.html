@@ -42,9 +42,9 @@
             </div>
 
             <div class="mb-6 flex gap-2">
-                <button class="btn btn-active" id="btn-october" onclick="selectMonth('october')" style="background: #7c3aed; color: white;">October</button>
-                <button class="btn btn-inactive" id="btn-november" onclick="selectMonth('november')">November</button>
-                <button class="btn btn-inactive" id="btn-december" onclick="selectMonth('december')">December</button>
+                <button class="btn btn-active" id="btn-oct" onclick="selectMonth('oct')" style="background: #7c3aed; color: white;">October</button>
+                <button class="btn btn-inactive" id="btn-nov" onclick="selectMonth('nov')">November</button>
+                <button class="btn btn-inactive" id="btn-dec" onclick="selectMonth('dec')">December</button>
                 <button class="btn btn-inactive" id="btn-q2" onclick="selectMonth('q2')">Q2 Total</button>
             </div>
 
@@ -110,21 +110,16 @@ if (sessionStorage.getItem('authenticated') === 'true') {
 
 document.getElementById('password-input')?.focus();
 
-const data = {"group":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"melbourne":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"brisbane":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"sydney":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}}};
-
-console.log('DATA LOADED:', data);
-console.log('Group data:', data.group);
-console.log('October data:', data.group.october);
-
+const data = {"melbourne":{"oct":{"month":"Oct","target":405000,"confirmed":370903.9633333333,"unconfirmed":0,"gap":34096.03666666668,"teams":{"dt":{"confirmed":147547.5833333333,"unconfirmed":0,"target":155000},"gg":{"confirmed":138055.38,"unconfirmed":0,"target":140000},"sc":{"confirmed":85301,"unconfirmed":0,"target":110000}}},"nov":{"month":"Nov","target":400000,"confirmed":359326.07333333336,"unconfirmed":15948,"gap":24725.926666666637,"teams":{"dt":{"confirmed":132930.25,"unconfirmed":15948,"target":150000},"gg":{"confirmed":136245.49,"unconfirmed":0,"target":120000},"sc":{"confirmed":90150.33333333334,"unconfirmed":0,"target":130000}}},"dec":{"month":"Dec","target":325000,"confirmed":228052.96333333335,"unconfirmed":28400,"gap":68547.03666666665,"teams":{"dt":{"confirmed":84418,"unconfirmed":18400,"target":140000},"gg":{"confirmed":57161.630000000005,"unconfirmed":10000,"target":60000},"sc":{"confirmed":86473.33333333334,"unconfirmed":0,"target":125000}}},"q2":{"month":"Q2 Total","target":1130000,"confirmed":958283,"unconfirmed":44348,"gap":127369,"teams":{"dt":{"confirmed":364895.8333333333,"unconfirmed":34348,"target":445000},"gg":{"confirmed":331462.5,"unconfirmed":10000,"target":320000},"sc":{"confirmed":261924.6666666667,"unconfirmed":0,"target":365000}}}},"brisbane":{"oct":{"month":"Oct","target":115000,"confirmed":114965.64,"unconfirmed":0,"gap":34.36000000000058},"nov":{"month":"Nov","target":100000,"confirmed":86375.64,"unconfirmed":0,"gap":13624.36},"dec":{"month":"Dec","target":75000,"confirmed":72551.64000000001,"unconfirmed":0,"gap":2448.359999999986},"q2":{"month":"Q2 Total","target":290000,"confirmed":273892.92000000004,"unconfirmed":0,"gap":16107.079999999958}},"sydney":{"oct":{"month":"Oct","target":36000,"confirmed":31277.18,"unconfirmed":0,"gap":4722.82},"nov":{"month":"Nov","target":51000,"confirmed":35500,"unconfirmed":0,"gap":15500},"dec":{"month":"Dec","target":40000,"confirmed":34400,"unconfirmed":0,"gap":5600},"q2":{"month":"Q2 Total","target":127000,"confirmed":101177.18,"unconfirmed":0,"gap":25822.820000000007}},"group":{"oct":{"month":"Oct","target":556000,"confirmed":517146.7833333333,"unconfirmed":0,"gap":38853.216666666674},"nov":{"month":"Nov","target":551000,"confirmed":481201.7133333334,"unconfirmed":15948,"gap":53850.28666666662},"dec":{"month":"Dec","target":440000,"confirmed":335004.6033333334,"unconfirmed":28400,"gap":76595.39666666661},"q2":{"month":"Q2 Total","target":1547000,"confirmed":1333353.0999999999,"unconfirmed":44348,"gap":169298.90000000014}}};
 let currentOffice = 'group';
-let currentMonth = 'october';
+let currentMonth = 'oct';
 
 function formatCurrency(value) { return '$' + (value / 1000).toFixed(0) + 'k'; }
 
 function selectOffice(office) {
     currentOffice = office;
     document.querySelectorAll('[id^="btn-"]').forEach(btn => {
-        if (btn.id.includes('october') || btn.id.includes('november') || btn.id.includes('december') || btn.id.includes('q2')) return;
+        if (btn.id.includes('oct') || btn.id.includes('nov') || btn.id.includes('dec') || btn.id.includes('q2')) return;
         btn.className = 'btn btn-inactive';
     });
     document.getElementById('btn-' + office).className = 'btn btn-active';
@@ -133,7 +128,7 @@ function selectOffice(office) {
 
 function selectMonth(month) {
     currentMonth = month;
-    document.querySelectorAll('[id^="btn-"][id*="october"], [id^="btn-"][id*="november"], [id^="btn-"][id*="december"], [id^="btn-"][id*="q2"]').forEach(btn => {
+    document.querySelectorAll('[id^="btn-"][id*="oct"], [id^="btn-"][id*="nov"], [id^="btn-"][id*="dec"], [id^="btn-"][id*="q2"]').forEach(btn => {
         btn.className = 'btn btn-inactive'; btn.style.background = ''; btn.style.color = '';
     });
     const btn = document.getElementById('btn-' + month);
@@ -155,18 +150,11 @@ function drawWaterfall(d) {
 }
 
 function updateDisplay() {
-    console.log('updateDisplay called, office:', currentOffice, 'month:', currentMonth);
-    console.log('Looking for:', 'data[' + currentOffice + '][' + currentMonth + ']');
-    
     const d = data[currentOffice][currentMonth];
-    
-    console.log('Found data:', d);
-    
     if (!d) {
-        alert('ERROR: No data for ' + currentOffice + ' - ' + currentMonth);
+        console.error('No data for', currentOffice, currentMonth);
         return;
     }
-    
     const oName = currentOffice === 'group' ? 'Group Total' : currentOffice.charAt(0).toUpperCase() + currentOffice.slice(1);
     document.getElementById('chartTitle').textContent = d.month + ' - ' + oName + ' Revenue Waterfall';
     document.getElementById('summaryCards').innerHTML = '<div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Target</div><div class="text-2xl font-bold text-gray-900">' + formatCurrency(d.target) + '</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Confirmed</div><div class="text-2xl font-bold text-green-600">' + formatCurrency(d.confirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.confirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Unconfirmed</div><div class="text-2xl font-bold text-yellow-600">' + formatCurrency(d.unconfirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Gap</div><div class="text-2xl font-bold text-red-600">' + formatCurrency(d.gap) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.gap/d.target)*100).toFixed(1) + '%</div></div></div>';
