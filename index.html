@@ -111,6 +111,11 @@ if (sessionStorage.getItem('authenticated') === 'true') {
 document.getElementById('password-input')?.focus();
 
 const data = {"group":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"melbourne":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"brisbane":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"sydney":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}}};
+
+console.log('DATA LOADED:', data);
+console.log('Group data:', data.group);
+console.log('October data:', data.group.october);
+
 let currentOffice = 'group';
 let currentMonth = 'october';
 
@@ -150,7 +155,18 @@ function drawWaterfall(d) {
 }
 
 function updateDisplay() {
+    console.log('updateDisplay called, office:', currentOffice, 'month:', currentMonth);
+    console.log('Looking for:', 'data[' + currentOffice + '][' + currentMonth + ']');
+    
     const d = data[currentOffice][currentMonth];
+    
+    console.log('Found data:', d);
+    
+    if (!d) {
+        alert('ERROR: No data for ' + currentOffice + ' - ' + currentMonth);
+        return;
+    }
+    
     const oName = currentOffice === 'group' ? 'Group Total' : currentOffice.charAt(0).toUpperCase() + currentOffice.slice(1);
     document.getElementById('chartTitle').textContent = d.month + ' - ' + oName + ' Revenue Waterfall';
     document.getElementById('summaryCards').innerHTML = '<div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Target</div><div class="text-2xl font-bold text-gray-900">' + formatCurrency(d.target) + '</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Confirmed</div><div class="text-2xl font-bold text-green-600">' + formatCurrency(d.confirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.confirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Unconfirmed</div><div class="text-2xl font-bold text-yellow-600">' + formatCurrency(d.unconfirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Gap</div><div class="text-2xl font-bold text-red-600">' + formatCurrency(d.gap) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.gap/d.target)*100).toFixed(1) + '%</div></div></div>';
