@@ -13,74 +13,108 @@
         .btn-active { background: #2563eb; color: white; }
         .btn-inactive { background: white; color: #374151; }
         .btn-inactive:hover { background: #f3f4f6; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        #dashboard { display: none; }
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="w-full max-w-7xl mx-auto p-6">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Q2 FY26 Revenue Waterfall - All Offices</h1>
-            <p class="text-gray-600">Weekly Update: November 18, 2025</p>
+    <div id="login-screen">
+        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-md w-full">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Revenue Dashboard Login</h2>
+            <input type="password" id="password-input" placeholder="Enter password" class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" onkeypress="if(event.key==='Enter') checkPassword()">
+            <button onclick="checkPassword()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Access Dashboard</button>
+            <p id="error-msg" class="text-red-600 text-sm mt-2 text-center" style="display:none;">Incorrect password</p>
         </div>
-
-        <div class="mb-4 flex gap-2">
-            <button class="btn btn-active" id="btn-group" onclick="selectOffice('group')">🌐 Group Total</button>
-            <button class="btn btn-inactive" id="btn-melbourne" onclick="selectOffice('melbourne')">Melbourne</button>
-            <button class="btn btn-inactive" id="btn-brisbane" onclick="selectOffice('brisbane')">Brisbane</button>
-            <button class="btn btn-inactive" id="btn-sydney" onclick="selectOffice('sydney')">Sydney</button>
-        </div>
-
-        <div class="mb-6 flex gap-2">
-            <button class="btn btn-active" id="btn-october" onclick="selectMonth('october')" style="background: #7c3aed; color: white;">October</button>
-            <button class="btn btn-inactive" id="btn-november" onclick="selectMonth('november')">November</button>
-            <button class="btn btn-inactive" id="btn-december" onclick="selectMonth('december')">December</button>
-            <button class="btn btn-inactive" id="btn-q2" onclick="selectMonth('q2')">Q2 Total</button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="summaryCards"></div>
-
-        <div class="card mb-8">
-            <div class="card-header text-white" style="background: linear-gradient(to right, #2563eb, #7c3aed);">
-                <h2 class="text-xl font-bold" id="chartTitle">October - Group Total Revenue Waterfall</h2>
-                <p class="text-blue-100 text-sm mt-1">Confirmed + Unconfirmed + Gap = Target</p>
+    </div>
+    
+    <div id="dashboard">
+        <div class="w-full max-w-7xl mx-auto p-6">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Q2 FY26 Revenue Waterfall - All Offices</h1>
+                <p class="text-gray-600">Weekly Update: November 18, 2025</p>
             </div>
-            <div class="card-content">
-                <div id="waterfallChart" style="height: 500px; width: 100%;"></div>
-                <div class="mt-6 bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-bold text-blue-900 mb-2">Waterfall Breakdown:</h3>
-                    <div class="grid grid-cols-2 gap-4 text-sm" id="waterfallBreakdown"></div>
+
+            <div class="mb-4 flex gap-2">
+                <button class="btn btn-active" id="btn-group" onclick="selectOffice('group')">🌐 Group Total</button>
+                <button class="btn btn-inactive" id="btn-melbourne" onclick="selectOffice('melbourne')">Melbourne</button>
+                <button class="btn btn-inactive" id="btn-brisbane" onclick="selectOffice('brisbane')">Brisbane</button>
+                <button class="btn btn-inactive" id="btn-sydney" onclick="selectOffice('sydney')">Sydney</button>
+            </div>
+
+            <div class="mb-6 flex gap-2">
+                <button class="btn btn-active" id="btn-october" onclick="selectMonth('october')" style="background: #7c3aed; color: white;">October</button>
+                <button class="btn btn-inactive" id="btn-november" onclick="selectMonth('november')">November</button>
+                <button class="btn btn-inactive" id="btn-december" onclick="selectMonth('december')">December</button>
+                <button class="btn btn-inactive" id="btn-q2" onclick="selectMonth('q2')">Q2 Total</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="summaryCards"></div>
+
+            <div class="card mb-8">
+                <div class="card-header text-white" style="background: linear-gradient(to right, #2563eb, #7c3aed);">
+                    <h2 class="text-xl font-bold" id="chartTitle">October - Group Total Revenue Waterfall</h2>
+                    <p class="text-blue-100 text-sm mt-1">Confirmed + Unconfirmed + Gap = Target</p>
+                </div>
+                <div class="card-content">
+                    <div id="waterfallChart" style="height: 500px; width: 100%;"></div>
+                    <div class="mt-6 bg-blue-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-blue-900 mb-2">Waterfall Breakdown:</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm" id="waterfallBreakdown"></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card mb-8" id="teamBreakdown" style="display: none;">
-            <div class="card-header text-white" style="background: linear-gradient(to right, #4f46e5, #7c3aed);">
-                <h2 class="text-xl font-bold" id="teamBreakdownTitle">Melbourne Team Breakdown</h2>
-            </div>
-            <div class="card-content">
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="teamTable"></table>
+            <div class="card mb-8" id="teamBreakdown" style="display: none;">
+                <div class="card-header text-white" style="background: linear-gradient(to right, #4f46e5, #7c3aed);">
+                    <h2 class="text-xl font-bold" id="teamBreakdownTitle">Melbourne Team Breakdown</h2>
+                </div>
+                <div class="card-content">
+                    <div class="overflow-x-auto">
+                        <table class="w-full" id="teamTable"></table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header text-white" style="background: linear-gradient(to right, #059669, #0d9488);">
-                <h2 class="text-xl font-bold" id="comparisonTitle">Office Breakdown</h2>
-            </div>
-            <div class="card-content">
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="comparisonTable"></table>
+            <div class="card">
+                <div class="card-header text-white" style="background: linear-gradient(to right, #059669, #0d9488);">
+                    <h2 class="text-xl font-bold" id="comparisonTitle">Office Breakdown</h2>
+                </div>
+                <div class="card-content">
+                    <div class="overflow-x-auto">
+                        <table class="w-full" id="comparisonTable"></table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+const PASSWORD = 'altshift2025';
+
+function checkPassword() {
+    const input = document.getElementById('password-input').value;
+    if (input === PASSWORD) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        sessionStorage.setItem('authenticated', 'true');
+    } else {
+        document.getElementById('error-msg').style.display = 'block';
+        document.getElementById('password-input').value = '';
+    }
+}
+
+if (sessionStorage.getItem('authenticated') === 'true') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+}
+
+document.getElementById('password-input')?.focus();
+
 const data = {"group":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"melbourne":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"brisbane":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}},"sydney":{"q2":{"month":"Q2 Total","target":0,"confirmed":0,"unconfirmed":0,"gap":0}}};
 let currentOffice = 'group';
 let currentMonth = 'october';
 
-function formatCurrency(value) { return `$${(value / 1000).toFixed(0)}k`; }
+function formatCurrency(value) { return '$' + (value / 1000).toFixed(0) + 'k'; }
 
 function selectOffice(office) {
     currentOffice = office;
@@ -88,7 +122,7 @@ function selectOffice(office) {
         if (btn.id.includes('october') || btn.id.includes('november') || btn.id.includes('december') || btn.id.includes('q2')) return;
         btn.className = 'btn btn-inactive';
     });
-    document.getElementById(`btn-${office}`).className = 'btn btn-active';
+    document.getElementById('btn-' + office).className = 'btn btn-active';
     updateDisplay();
 }
 
@@ -97,7 +131,7 @@ function selectMonth(month) {
     document.querySelectorAll('[id^="btn-"][id*="october"], [id^="btn-"][id*="november"], [id^="btn-"][id*="december"], [id^="btn-"][id*="q2"]').forEach(btn => {
         btn.className = 'btn btn-inactive'; btn.style.background = ''; btn.style.color = '';
     });
-    const btn = document.getElementById(`btn-${month}`);
+    const btn = document.getElementById('btn-' + month);
     btn.className = 'btn btn-active'; btn.style.background = '#7c3aed'; btn.style.color = 'white';
     updateDisplay();
 }
@@ -111,42 +145,42 @@ function drawWaterfall(d) {
     const uy = getY(d.confirmed + d.unconfirmed), uh = getH(d.unconfirmed);
     const gy = getY(d.target), gh = getH(d.gap);
     const x1=50, x2=x1+w+g, x3=x2+w+g, x4=x3+w+g;
-    svg.innerHTML = `<line x1="30" y1="50" x2="750" y2="50" stroke="#e5e7eb" stroke-width="1"/><line x1="30" y1="450" x2="750" y2="450" stroke="#e5e7eb" stroke-width="2"/><line x1="30" y1="50" x2="750" y2="50" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/><text x="755" y="55" font-size="12" fill="#ef4444" font-weight="bold">Target: ${formatCurrency(d.target)}</text><rect x="${x1}" y="${cy}" width="${w}" height="${ch}" fill="#10b981" stroke="#059669" stroke-width="2"/><text x="${x1+w/2}" y="${cy-10}" font-size="14" font-weight="bold" fill="#059669" text-anchor="middle">${formatCurrency(d.confirmed)}</text><text x="${x1+w/2}" y="480" font-size="13" font-weight="bold" text-anchor="middle">Confirmed</text><line x1="${x1+w}" y1="${cy}" x2="${x2}" y2="${cy}" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>${d.unconfirmed>0?`<rect x="${x2}" y="${uy}" width="${w}" height="${uh}" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/><text x="${x2+w/2}" y="${uy-10}" font-size="14" font-weight="bold" fill="#f59e0b" text-anchor="middle">${formatCurrency(d.unconfirmed)}</text>`:''}<rect x="${x2}" y="${cy}" width="${w}" height="${ch}" fill="#10b981" opacity="0.3"/><text x="${x2+w/2}" y="480" font-size="13" font-weight="bold" text-anchor="middle">+ Unconfirmed</text><line x1="${x2+w}" y1="${d.unconfirmed>0?uy:cy}" x2="${x3}" y2="${d.unconfirmed>0?uy:cy}" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="${x3}" y="${gy}" width="${w}" height="${gh}" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,4"/><text x="${x3+w/2}" y="${gy+gh/2}" font-size="14" font-weight="bold" fill="#ef4444" text-anchor="middle">${formatCurrency(d.gap)}</text><rect x="${x3}" y="${cy}" width="${w}" height="${ch+uh}" fill="#10b981" opacity="0.2"/><text x="${x3+w/2}" y="480" font-size="13" font-weight="bold" text-anchor="middle">Gap to Close</text><line x1="${x3+w}" y1="50" x2="${x4}" y2="50" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="${x4}" y="50" width="${w}" height="${h}" fill="none" stroke="#ef4444" stroke-width="3"/><text x="${x4+w/2}" y="250" font-size="14" font-weight="bold" fill="#ef4444" text-anchor="middle">${formatCurrency(d.target)}</text><text x="${x4+w/2}" y="480" font-size="13" font-weight="bold" text-anchor="middle">Target</text>`;
+    svg.innerHTML = '<line x1="30" y1="50" x2="750" y2="50" stroke="#e5e7eb" stroke-width="1"/><line x1="30" y1="450" x2="750" y2="450" stroke="#e5e7eb" stroke-width="2"/><line x1="30" y1="50" x2="750" y2="50" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/><text x="755" y="55" font-size="12" fill="#ef4444" font-weight="bold">Target: ' + formatCurrency(d.target) + '</text><rect x="' + x1 + '" y="' + cy + '" width="' + w + '" height="' + ch + '" fill="#10b981" stroke="#059669" stroke-width="2"/><text x="' + (x1+w/2) + '" y="' + (cy-10) + '" font-size="14" font-weight="bold" fill="#059669" text-anchor="middle">' + formatCurrency(d.confirmed) + '</text><text x="' + (x1+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">Confirmed</text><line x1="' + (x1+w) + '" y1="' + cy + '" x2="' + x2 + '" y2="' + cy + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>' + (d.unconfirmed>0?'<rect x="' + x2 + '" y="' + uy + '" width="' + w + '" height="' + uh + '" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/><text x="' + (x2+w/2) + '" y="' + (uy-10) + '" font-size="14" font-weight="bold" fill="#f59e0b" text-anchor="middle">' + formatCurrency(d.unconfirmed) + '</text>':'') + '<rect x="' + x2 + '" y="' + cy + '" width="' + w + '" height="' + ch + '" fill="#10b981" opacity="0.3"/><text x="' + (x2+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">+ Unconfirmed</text><line x1="' + (x2+w) + '" y1="' + (d.unconfirmed>0?uy:cy) + '" x2="' + x3 + '" y2="' + (d.unconfirmed>0?uy:cy) + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="' + x3 + '" y="' + gy + '" width="' + w + '" height="' + gh + '" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,4"/><text x="' + (x3+w/2) + '" y="' + (gy+gh/2) + '" font-size="14" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(d.gap) + '</text><rect x="' + x3 + '" y="' + cy + '" width="' + w + '" height="' + (ch+uh) + '" fill="#10b981" opacity="0.2"/><text x="' + (x3+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">Gap to Close</text><line x1="' + (x3+w) + '" y1="50" x2="' + x4 + '" y2="50" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/><rect x="' + x4 + '" y="50" width="' + w + '" height="' + h + '" fill="none" stroke="#ef4444" stroke-width="3"/><text x="' + (x4+w/2) + '" y="250" font-size="14" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(d.target) + '</text><text x="' + (x4+w/2) + '" y="480" font-size="13" font-weight="bold" text-anchor="middle">Target</text>';
     return svg;
 }
 
 function updateDisplay() {
     const d = data[currentOffice][currentMonth];
     const oName = currentOffice === 'group' ? 'Group Total' : currentOffice.charAt(0).toUpperCase() + currentOffice.slice(1);
-    document.getElementById('chartTitle').textContent = `${d.month} - ${oName} Revenue Waterfall`;
-    document.getElementById('summaryCards').innerHTML = `<div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Target</div><div class="text-2xl font-bold text-gray-900">${formatCurrency(d.target)}</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Confirmed</div><div class="text-2xl font-bold text-green-600">${formatCurrency(d.confirmed)}</div><div class="text-sm text-gray-500 mt-1">${((d.confirmed/d.target)*100).toFixed(1)}%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Unconfirmed</div><div class="text-2xl font-bold text-yellow-600">${formatCurrency(d.unconfirmed)}</div><div class="text-sm text-gray-500 mt-1">${((d.unconfirmed/d.target)*100).toFixed(1)}%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Gap</div><div class="text-2xl font-bold text-red-600">${formatCurrency(d.gap)}</div><div class="text-sm text-gray-500 mt-1">${((d.gap/d.target)*100).toFixed(1)}%</div></div></div>`;
+    document.getElementById('chartTitle').textContent = d.month + ' - ' + oName + ' Revenue Waterfall';
+    document.getElementById('summaryCards').innerHTML = '<div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Target</div><div class="text-2xl font-bold text-gray-900">' + formatCurrency(d.target) + '</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Confirmed</div><div class="text-2xl font-bold text-green-600">' + formatCurrency(d.confirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.confirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Unconfirmed</div><div class="text-2xl font-bold text-yellow-600">' + formatCurrency(d.unconfirmed) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%</div></div></div><div class="card"><div class="card-content pt-6"><div class="text-sm text-gray-600 mb-1">Gap</div><div class="text-2xl font-bold text-red-600">' + formatCurrency(d.gap) + '</div><div class="text-sm text-gray-500 mt-1">' + ((d.gap/d.target)*100).toFixed(1) + '%</div></div></div>';
     document.getElementById('waterfallChart').innerHTML = '';
     document.getElementById('waterfallChart').appendChild(drawWaterfall(d));
-    document.getElementById('waterfallBreakdown').innerHTML = `<div><div class="text-gray-700">Confirmed:</div><div class="font-bold text-green-700">${formatCurrency(d.confirmed)} (${((d.confirmed/d.target)*100).toFixed(1)}%)</div></div><div><div class="text-gray-700">Unconfirmed:</div><div class="font-bold text-yellow-700">${formatCurrency(d.unconfirmed)} (${((d.unconfirmed/d.target)*100).toFixed(1)}%)</div></div><div><div class="text-gray-700">Total Pipeline:</div><div class="font-bold text-blue-700">${formatCurrency(d.confirmed+d.unconfirmed)} (${(((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(1)}%)</div></div><div><div class="text-gray-700">Gap:</div><div class="font-bold text-red-700">${formatCurrency(d.gap)} (${((d.gap/d.target)*100).toFixed(1)}%)</div></div>`;
+    document.getElementById('waterfallBreakdown').innerHTML = '<div><div class="text-gray-700">Confirmed:</div><div class="font-bold text-green-700">' + formatCurrency(d.confirmed) + ' (' + ((d.confirmed/d.target)*100).toFixed(1) + '%)</div></div><div><div class="text-gray-700">Unconfirmed:</div><div class="font-bold text-yellow-700">' + formatCurrency(d.unconfirmed) + ' (' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%)</div></div><div><div class="text-gray-700">Total Pipeline:</div><div class="font-bold text-blue-700">' + formatCurrency(d.confirmed+d.unconfirmed) + ' (' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(1) + '%)</div></div><div><div class="text-gray-700">Gap:</div><div class="font-bold text-red-700">' + formatCurrency(d.gap) + ' (' + ((d.gap/d.target)*100).toFixed(1) + '%)</div></div>';
     
     if(currentOffice==='melbourne'&&d.teams){
         document.getElementById('teamBreakdown').style.display='block';
-        document.getElementById('teamBreakdownTitle').textContent=`Melbourne Team - ${d.month}`;
+        document.getElementById('teamBreakdownTitle').textContent='Melbourne Team - ' + d.month;
         const teams=[{name:'Dream Team',key:'dt'},{name:'Go-Getters',key:'gg'},{name:'Social & Content',key:'sc'}];
         let html='<thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left">Team</th><th class="px-4 py-3 text-right">Target</th><th class="px-4 py-3 text-right">Confirmed</th><th class="px-4 py-3 text-right">Unconfirmed</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3 text-right">Gap</th><th class="px-4 py-3 text-center">%</th></tr></thead><tbody>';
         teams.forEach(t=>{
             const tm=d.teams[t.key],tot=tm.confirmed+tm.unconfirmed,gap=tm.target-tot,pct=(tot/tm.target*100).toFixed(0);
             const badge=pct>=90?'bg-green-100 text-green-800':pct>=75?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800';
-            html+=`<tr class="border-b"><td class="px-4 py-3">${t.name}</td><td class="px-4 py-3 text-right">${formatCurrency(tm.target)}</td><td class="px-4 py-3 text-right text-green-700">${formatCurrency(tm.confirmed)}</td><td class="px-4 py-3 text-right text-yellow-700">${formatCurrency(tm.unconfirmed)}</td><td class="px-4 py-3 text-right">${formatCurrency(tot)}</td><td class="px-4 py-3 text-right text-red-600">${formatCurrency(gap)}</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ${badge}">${pct}%</span></td></tr>`;
+            html+='<tr class="border-b"><td class="px-4 py-3">' + t.name + '</td><td class="px-4 py-3 text-right">' + formatCurrency(tm.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(tm.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(tm.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(tot) + '</td><td class="px-4 py-3 text-right text-red-600">' + formatCurrency(gap) + '</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ' + badge + '">' + pct + '%</span></td></tr>';
         });
-        html+=`<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">TOTAL</td><td class="px-4 py-3 text-right">${formatCurrency(d.target)}</td><td class="px-4 py-3 text-right text-green-700">${formatCurrency(d.confirmed)}</td><td class="px-4 py-3 text-right text-yellow-700">${formatCurrency(d.unconfirmed)}</td><td class="px-4 py-3 text-right">${formatCurrency(d.confirmed+d.unconfirmed)}</td><td class="px-4 py-3 text-right text-red-700">${formatCurrency(d.gap)}</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">${(((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0)}%</span></td></tr></tbody>`;
+        html+='<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">TOTAL</td><td class="px-4 py-3 text-right">' + formatCurrency(d.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(d.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(d.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(d.confirmed+d.unconfirmed) + '</td><td class="px-4 py-3 text-right text-red-700">' + formatCurrency(d.gap) + '</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0) + '%</span></td></tr></tbody>';
         document.getElementById('teamTable').innerHTML=html;
     }else{document.getElementById('teamBreakdown').style.display='none';}
     
     if(currentOffice==='group'){
-        document.getElementById('comparisonTitle').textContent=`Office Breakdown - ${d.month}`;
+        document.getElementById('comparisonTitle').textContent='Office Breakdown - ' + d.month;
         let html='<thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left">Office</th><th class="px-4 py-3 text-right">Target</th><th class="px-4 py-3 text-right">Confirmed</th><th class="px-4 py-3 text-right">Unconfirmed</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3 text-right">Gap</th><th class="px-4 py-3 text-center">%</th><th class="px-4 py-3 text-right">% of Group</th></tr></thead><tbody>';
         ['melbourne','brisbane','sydney'].forEach(o=>{
             const od=data[o][currentMonth],pct=((od.confirmed+od.unconfirmed)/od.target*100).toFixed(0),pctG=(od.target/d.target*100).toFixed(1);
             const badge=pct>=90?'bg-green-100 text-green-800':pct>=75?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800';
-            html+=`<tr class="border-b"><td class="px-4 py-3 capitalize">${o}</td><td class="px-4 py-3 text-right">${formatCurrency(od.target)}</td><td class="px-4 py-3 text-right text-green-700">${formatCurrency(od.confirmed)}</td><td class="px-4 py-3 text-right text-yellow-700">${formatCurrency(od.unconfirmed)}</td><td class="px-4 py-3 text-right">${formatCurrency(od.confirmed+od.unconfirmed)}</td><td class="px-4 py-3 text-right text-red-600">${formatCurrency(od.gap)}</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ${badge}">${pct}%</span></td><td class="px-4 py-3 text-right">${pctG}%</td></tr>`;
+            html+='<tr class="border-b"><td class="px-4 py-3 capitalize">' + o + '</td><td class="px-4 py-3 text-right">' + formatCurrency(od.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(od.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(od.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(od.confirmed+od.unconfirmed) + '</td><td class="px-4 py-3 text-right text-red-600">' + formatCurrency(od.gap) + '</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ' + badge + '">' + pct + '%</span></td><td class="px-4 py-3 text-right">' + pctG + '%</td></tr>';
         });
-        html+=`<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">GROUP TOTAL</td><td class="px-4 py-3 text-right">${formatCurrency(d.target)}</td><td class="px-4 py-3 text-right text-green-700">${formatCurrency(d.confirmed)}</td><td class="px-4 py-3 text-right text-yellow-700">${formatCurrency(d.unconfirmed)}</td><td class="px-4 py-3 text-right">${formatCurrency(d.confirmed+d.unconfirmed)}</td><td class="px-4 py-3 text-right text-red-700">${formatCurrency(d.gap)}</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">${(((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0)}%</span></td><td class="px-4 py-3 text-right">100%</td></tr></tbody>`;
+        html+='<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">GROUP TOTAL</td><td class="px-4 py-3 text-right">' + formatCurrency(d.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(d.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(d.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(d.confirmed+d.unconfirmed) + '</td><td class="px-4 py-3 text-right text-red-700">' + formatCurrency(d.gap) + '</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">' + (((d.confirmed+d.unconfirmed)/d.target)*100).toFixed(0) + '%</span></td><td class="px-4 py-3 text-right">100%</td></tr></tbody>';
         document.getElementById('comparisonTable').innerHTML=html;
     }
 }
