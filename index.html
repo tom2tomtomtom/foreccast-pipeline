@@ -2,401 +2,453 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rolling 3-Month Revenue Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        .card { background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); overflow: hidden; }
-        .card-header { padding: 1rem 1.5rem; }
-        .card-content { padding: 1.5rem; }
-        .btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; cursor: pointer; border: none; font-size: 0.875rem; }
-        .btn-active { background: #2563eb; color: white; }
-        .btn-inactive { background: white; color: #374151; border: 1px solid #e5e7eb; }
-        .btn-inactive:hover { background: #f3f4f6; }
-        .btn-month-active { background: #7c3aed; color: white; }
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1rem; }
-        #dashboard { display: none; }
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        @media (max-width: 768px) {
-            .card-header { padding: 0.75rem 1rem; }
-            .card-content { padding: 1rem; }
-            .btn { padding: 0.4rem 0.75rem; font-size: 0.75rem; }
-            h1 { font-size: 1.5rem !important; }
-            .summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
+        body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        #app { display: none; }
     </style>
 </head>
 <body class="bg-gray-50">
     <div id="login-screen">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 text-center">Revenue Dashboard</h2>
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Revenue Dashboard</h2>
             <input type="password" id="password-input" placeholder="Enter password" 
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 onkeypress="if(event.key==='Enter') checkPassword()">
             <button onclick="checkPassword()" 
-                class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Access Dashboard</button>
-            <p id="error-msg" class="text-red-600 text-sm mt-2 text-center" style="display:none;">Incorrect password</p>
+                class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-lg">Access Dashboard</button>
+            <p id="error-msg" class="text-red-600 text-sm mt-3 text-center" style="display:none;">Incorrect password</p>
         </div>
     </div>
-    
-    <div id="dashboard">
-        <div class="w-full max-w-7xl mx-auto p-4 sm:p-6">
-            <div class="mb-6">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Rolling 3-Month Revenue Dashboard</h1>
-                <p class="text-gray-600">December (Current) + January + February (Forward Looking)</p>
-                <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p class="text-sm text-blue-900"><strong>📊 Updated:</strong> 9 December 2025</p>
-                </div>
-            </div>
-
-            <div class="mb-4 flex gap-2 flex-wrap">
-                <button class="btn btn-active" id="btn-melbourne" onclick="selectOffice('melbourne')">Melbourne</button>
-                <button class="btn btn-inactive" id="btn-sydney" onclick="selectOffice('sydney')">Sydney</button>
-                <button class="btn btn-inactive" id="btn-brisbane" onclick="selectOffice('brisbane')">Brisbane</button>
-                <button class="btn btn-inactive" id="btn-group" onclick="selectOffice('group')">🌐 Group</button>
-            </div>
-
-            <div class="mb-6 flex gap-2 flex-wrap">
-                <button class="btn btn-inactive" id="btn-dec" onclick="selectMonth('dec')">December</button>
-                <button class="btn btn-inactive" id="btn-jan" onclick="selectMonth('jan')">January</button>
-                <button class="btn btn-inactive" id="btn-feb" onclick="selectMonth('feb')">February</button>
-                <button class="btn btn-month-active" id="btn-rolling" onclick="selectMonth('rolling')">Rolling 3M</button>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="card mb-6">
-                <div class="card-content">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4 text-center" id="summaryTitle">Melbourne - Rolling 3-Month</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 summary-grid" id="summaryCards"></div>
-                </div>
-            </div>
-
-            <!-- Waterfall Chart -->
-            <div class="card mb-6">
-                <div class="card-header text-white" style="background: linear-gradient(to right, #4f46e5, #7c3aed);">
-                    <div class="flex justify-between items-center flex-wrap gap-2">
-                        <h2 class="text-lg sm:text-xl font-bold" id="chartTitle">Revenue Waterfall</h2>
-                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-white/20" id="completeBadge">0% Complete</span>
-                    </div>
-                </div>
-                <div class="card-content">
-                    <div id="waterfallChart" style="height: 400px; width: 100%;"></div>
-                    <div class="mt-4 bg-blue-50 p-4 rounded-lg">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm" id="waterfallBreakdown"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Team Breakdown (Melbourne only) -->
-            <div class="card mb-6" id="teamBreakdown" style="display: none;">
-                <div class="card-header text-white" style="background: linear-gradient(to right, #059669, #0d9488);">
-                    <h2 class="text-lg sm:text-xl font-bold">Melbourne Team Breakdown</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-container">
-                        <table class="w-full" id="teamTable"></table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top 5 Clients -->
-            <div class="card mb-6">
-                <div class="card-header text-white" style="background: linear-gradient(to right, #059669, #10b981);">
-                    <h2 class="text-lg sm:text-xl font-bold" id="clientsTitle">Top 5 Clients</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-container">
-                        <table class="w-full" id="clientsTable"></table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Office Comparison (Group view) -->
-            <div class="card mb-6" id="officeComparison" style="display: none;">
-                <div class="card-header text-white" style="background: linear-gradient(to right, #2563eb, #3b82f6);">
-                    <h2 class="text-lg sm:text-xl font-bold">Office Comparison</h2>
-                </div>
-                <div class="card-content">
-                    <div class="table-container">
-                        <table class="w-full" id="officeTable"></table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Key Insights -->
-            <div class="card">
-                <div class="card-header text-white" style="background: linear-gradient(to right, #dc2626, #ef4444);">
-                    <h2 class="text-lg sm:text-xl font-bold">Key Insights</h2>
-                </div>
-                <div class="card-content" id="insights"></div>
-            </div>
-        </div>
-    </div>
+    <div id="app"></div>
 
     <script>
-const PASSWORD = 'altshift2025';
-const data = {"melbourne":{"dreamTeam":{"name":"Dream Team","dec":{"target":140000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":126018,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":161460,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":427478,"confirmed":0,"unconfirmed":0,"total":0}},"goGetters":{"name":"Go-Getters","dec":{"target":60000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":90619,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":116106,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":266725,"confirmed":0,"unconfirmed":0,"total":0}},"socialContent":{"name":"Social & Content","dec":{"target":125000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":103363,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":132434,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":360797,"confirmed":0,"unconfirmed":0,"total":0}},"total":{"name":"Melbourne Total","dec":{"target":325000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":320000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":410000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":1055000,"confirmed":0,"unconfirmed":0,"total":0}}},"sydney":{"sydney":{"name":"Sydney","dec":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":50000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":130000,"confirmed":0,"unconfirmed":0,"total":0}},"total":{"name":"Sydney Total","dec":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":50000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":130000,"confirmed":0,"unconfirmed":0,"total":0}}},"brisbane":{"brisbane":{"name":"Brisbane","dec":{"target":75000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":90000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":100000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":265000,"confirmed":0,"unconfirmed":0,"total":0}},"total":{"name":"Brisbane Total","dec":{"target":75000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":90000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":100000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":265000,"confirmed":0,"unconfirmed":0,"total":0}}},"group":{"total":{"name":"Group Total","dec":{"target":440000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":450000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":560000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":1450000,"confirmed":0,"unconfirmed":0,"total":0}}}};
-const topClientsData = {"dec":{"dreamTeam":[],"goGetters":[],"socialContent":[],"melbourne":[],"sydney":[],"brisbane":[],"group":[]},"jan":{"dreamTeam":[],"goGetters":[],"socialContent":[],"melbourne":[],"sydney":[],"brisbane":[],"group":[]},"feb":{"dreamTeam":[],"goGetters":[],"socialContent":[],"melbourne":[],"sydney":[],"brisbane":[],"group":[]},"rolling":{"dreamTeam":[],"goGetters":[],"socialContent":[],"melbourne":[],"sydney":[],"brisbane":[],"group":[]}};
-
-let currentOffice = 'melbourne';
-let currentMonth = 'rolling';
-
-function checkPassword() {
-    const input = document.getElementById('password-input').value;
-    if (input === PASSWORD) {
+    const PASSWORD = 'altshift2025';
+    function checkPassword() {
+        if (document.getElementById('password-input').value === PASSWORD) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            sessionStorage.setItem('authenticated', 'true');
+        } else {
+            document.getElementById('error-msg').style.display = 'block';
+            document.getElementById('password-input').value = '';
+        }
+    }
+    if (sessionStorage.getItem('authenticated') === 'true') {
         document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        sessionStorage.setItem('authenticated', 'true');
-    } else {
-        document.getElementById('error-msg').style.display = 'block';
-        document.getElementById('password-input').value = '';
+        document.getElementById('app').style.display = 'block';
     }
-}
+    document.getElementById('password-input')?.focus();
+    </script>
 
-if (sessionStorage.getItem('authenticated') === 'true') {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-}
+    <script type="text/babel">
+    const { useState } = React;
+    const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } = Recharts;
 
-document.getElementById('password-input')?.focus();
+    // Injected data from n8n
+    const teamData = {"melbourne":{"dreamTeam":{"name":"Dream Team","dec":{"target":140000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":126018,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":161460,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":427478,"confirmed":0,"unconfirmed":0,"total":0}},"goGetters":{"name":"Go-Getters","dec":{"target":60000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":90619,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":116106,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":266725,"confirmed":0,"unconfirmed":0,"total":0}},"socialContent":{"name":"Social & Content","dec":{"target":125000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":103363,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":132434,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":360797,"confirmed":0,"unconfirmed":0,"total":0}},"total":{"name":"Melbourne Total","dec":{"target":325000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":320000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":410000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":1055000,"confirmed":0,"unconfirmed":0,"total":0}}},"sydney":{"sydney":{"name":"Sydney","dec":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":50000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":130000,"confirmed":0,"unconfirmed":0,"total":0}},"total":{"name":"Sydney Total","dec":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":40000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":50000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":130000,"confirmed":0,"unconfirmed":0,"total":0}}},"brisbane":{"brisbane":{"name":"Brisbane","dec":{"target":75000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":90000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":100000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":265000,"confirmed":0,"unconfirmed":0,"total":0}},"total":{"name":"Brisbane Total","dec":{"target":75000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":90000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":100000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":265000,"confirmed":0,"unconfirmed":0,"total":0}}},"group":{"total":{"name":"Group Total","dec":{"target":440000,"confirmed":0,"unconfirmed":0,"total":0},"jan":{"target":450000,"confirmed":0,"unconfirmed":0,"total":0},"feb":{"target":560000,"confirmed":0,"unconfirmed":0,"total":0},"rolling":{"target":1450000,"confirmed":0,"unconfirmed":0,"total":0}}}};
+    const clientData = {"dec":{"dreamTeam":[],"goGetters":[],"socialContent":[],"sydney":[],"brisbane":[],"melbourne":[],"group":[]},"jan":{"dreamTeam":[],"goGetters":[],"socialContent":[],"sydney":[],"brisbane":[],"melbourne":[],"group":[]},"feb":{"dreamTeam":[],"goGetters":[],"socialContent":[],"sydney":[],"brisbane":[],"melbourne":[],"group":[]},"rolling":{"dreamTeam":[],"goGetters":[],"socialContent":[],"sydney":[],"brisbane":[],"melbourne":[],"group":[]}};
+    const updateDate = "9 December 2025";
 
-function formatCurrency(value) { 
-    return '$' + Math.round(value / 1000) + 'k'; 
-}
+    // Simple Card components
+    const Card = ({ children, className = '' }) => (
+      <div className={`bg-white rounded-xl shadow-md overflow-hidden ${className}`}>{children}</div>
+    );
+    const CardHeader = ({ children, className = '' }) => (
+      <div className={`px-6 py-4 ${className}`}>{children}</div>
+    );
+    const CardContent = ({ children, className = '' }) => (
+      <div className={`px-6 pb-6 ${className}`}>{children}</div>
+    );
 
-function formatFullCurrency(value) {
-    return '$' + value.toLocaleString('en-AU', { maximumFractionDigits: 0 });
-}
+    function Rolling3MonthDashboard() {
+      const [selectedOffice, setSelectedOffice] = useState('melbourne');
+      const [selectedMonth, setSelectedMonth] = useState('rolling');
 
-function selectOffice(office) {
-    currentOffice = office;
-    ['melbourne', 'sydney', 'brisbane', 'group'].forEach(o => {
-        document.getElementById('btn-' + o).className = o === office ? 'btn btn-active' : 'btn btn-inactive';
-    });
-    updateDisplay();
-}
+      const formatCurrency = (value) => `$${(value / 1000).toFixed(0)}k`;
 
-function selectMonth(month) {
-    currentMonth = month;
-    ['dec', 'jan', 'feb', 'rolling'].forEach(m => {
-        document.getElementById('btn-' + m).className = m === month ? 'btn btn-month-active' : 'btn btn-inactive';
-    });
-    updateDisplay();
-}
+      const getTeamsForOffice = () => {
+        const office = teamData[selectedOffice];
+        if (!office) return [];
+        return Object.keys(office).filter(key => key !== 'total');
+      };
 
-function getOfficeData() {
-    return data[currentOffice]?.total?.[currentMonth];
-}
+      const WaterfallChart = ({ data, teamName }) => {
+        const chartHeight = 320;
+        const barWidth = 90;
+        const gap = 45;
+        const total = data.confirmed + data.unconfirmed;
+        const exceeding = total > data.target;
+        const maxValue = exceeding ? total * 1.15 : data.target * 1.15;
+        const getY = (value) => 40 + chartHeight - (value / maxValue * chartHeight);
+        const getHeight = (value) => (value / maxValue * chartHeight);
+        const gapValue = exceeding ? 0 : Math.max(0, data.target - total);
+        const excessValue = exceeding ? total - data.target : 0;
+        const confirmedHeight = getHeight(data.confirmed);
+        const confirmedY = getY(data.confirmed);
+        const unconfirmedHeight = getHeight(data.unconfirmed);
+        const unconfirmedY = getY(total);
+        const gapHeight = getHeight(gapValue);
+        const gapY = exceeding ? 0 : getY(data.target);
+        const targetY = getY(data.target);
+        const targetHeight = getHeight(data.target);
+        const x1 = 70, x2 = x1 + barWidth + gap, x3 = x2 + barWidth + gap, x4 = x3 + barWidth + gap;
 
-function drawWaterfall(d) {
-    if (!d) return;
-    const container = document.getElementById('waterfallChart');
-    container.innerHTML = '';
-    
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 700 380');
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    svg.style.width = '100%';
-    svg.style.height = '100%';
-    
-    const h = 280, w = 90, g = 45;
-    const total = d.confirmed + d.unconfirmed;
-    const exceeding = total > d.target;
-    const maxVal = Math.max(d.target, total) * 1.15;
-    
-    const getY = v => 50 + h - (v / maxVal * h);
-    const getH = v => v / maxVal * h;
-    
-    const x1 = 80, x2 = x1 + w + g, x3 = x2 + w + g, x4 = x3 + w + g;
-    const targetY = getY(d.target);
-    const confirmedY = getY(d.confirmed);
-    const confirmedH = getH(d.confirmed);
-    const totalY = getY(total);
-    const unconfirmedH = getH(d.unconfirmed);
-    const gapVal = exceeding ? 0 : d.target - total;
-    const gapH = getH(gapVal);
-    
-    let html = '';
-    
-    // Grid lines
-    html += '<line x1="60" y1="50" x2="650" y2="50" stroke="#e5e7eb" stroke-width="1"/>';
-    html += '<line x1="60" y1="' + (50 + h) + '" x2="650" y2="' + (50 + h) + '" stroke="#e5e7eb" stroke-width="2"/>';
-    
-    // Target line
-    html += '<line x1="60" y1="' + targetY + '" x2="650" y2="' + targetY + '" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/>';
-    html += '<text x="655" y="' + (targetY + 4) + '" font-size="11" fill="#ef4444" font-weight="bold">Target</text>';
-    
-    // Confirmed bar
-    html += '<rect x="' + x1 + '" y="' + confirmedY + '" width="' + w + '" height="' + confirmedH + '" fill="#10b981" stroke="#059669" stroke-width="2" rx="4"/>';
-    html += '<text x="' + (x1 + w/2) + '" y="' + (confirmedY - 8) + '" font-size="13" font-weight="bold" fill="#059669" text-anchor="middle">' + formatCurrency(d.confirmed) + '</text>';
-    html += '<text x="' + (x1 + w/2) + '" y="' + (confirmedY - 22) + '" font-size="10" fill="#059669" text-anchor="middle">' + ((d.confirmed/d.target)*100).toFixed(0) + '%</text>';
-    html += '<text x="' + (x1 + w/2) + '" y="360" font-size="12" font-weight="bold" text-anchor="middle">Confirmed</text>';
-    
-    // Connector line
-    html += '<line x1="' + (x1 + w) + '" y1="' + confirmedY + '" x2="' + x2 + '" y2="' + confirmedY + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>';
-    
-    // Unconfirmed bar + base
-    html += '<rect x="' + x2 + '" y="' + confirmedY + '" width="' + w + '" height="' + confirmedH + '" fill="#10b981" opacity="0.3" rx="4"/>';
-    if (d.unconfirmed > 0) {
-        html += '<rect x="' + x2 + '" y="' + totalY + '" width="' + w + '" height="' + unconfirmedH + '" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" rx="4"/>';
-        html += '<text x="' + (x2 + w/2) + '" y="' + (totalY - 8) + '" font-size="13" font-weight="bold" fill="#f59e0b" text-anchor="middle">' + formatCurrency(d.unconfirmed) + '</text>';
-        html += '<text x="' + (x2 + w/2) + '" y="' + (totalY - 22) + '" font-size="10" fill="#f59e0b" text-anchor="middle">+' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%</text>';
+        return (
+          <div style={{ height: '420px', width: '100%' }}>
+            <svg width="100%" height="100%" viewBox="0 0 680 420" preserveAspectRatio="xMidYMid meet">
+              <line x1="50" y1="40" x2="650" y2="40" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="50" y1="360" x2="650" y2="360" stroke="#e5e7eb" strokeWidth="2" />
+              <line x1="50" y1={targetY} x2="650" y2={targetY} stroke="#ef4444" strokeWidth="2" strokeDasharray="5,5" />
+              <text x="655" y={targetY + 4} fontSize="11" fill="#ef4444" fontWeight="bold">Target</text>
+              
+              <rect x={x1} y={confirmedY} width={barWidth} height={confirmedHeight} fill="#10b981" stroke="#059669" strokeWidth="2" rx="4" />
+              <text x={x1 + barWidth/2} y={confirmedY - 8} fontSize="13" fontWeight="bold" fill="#059669" textAnchor="middle">{formatCurrency(data.confirmed)}</text>
+              <text x={x1 + barWidth/2} y={confirmedY - 22} fontSize="10" fill="#059669" textAnchor="middle">{((data.confirmed / data.target) * 100).toFixed(0)}%</text>
+              <text x={x1 + barWidth/2} y="390" fontSize="12" fontWeight="bold" textAnchor="middle">Confirmed</text>
+              
+              <line x1={x1 + barWidth} y1={confirmedY} x2={x2} y2={confirmedY} stroke="#94a3b8" strokeWidth="2" strokeDasharray="3,3" />
+              
+              {data.unconfirmed > 0 && (
+                <>
+                  <rect x={x2} y={unconfirmedY} width={barWidth} height={unconfirmedHeight} fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" rx="4" />
+                  <text x={x2 + barWidth/2} y={unconfirmedY - 8} fontSize="13" fontWeight="bold" fill="#f59e0b" textAnchor="middle">{formatCurrency(data.unconfirmed)}</text>
+                  <text x={x2 + barWidth/2} y={unconfirmedY - 22} fontSize="10" fill="#f59e0b" textAnchor="middle">+{((data.unconfirmed / data.target) * 100).toFixed(1)}%</text>
+                </>
+              )}
+              <rect x={x2} y={confirmedY} width={barWidth} height={confirmedHeight} fill="#10b981" opacity="0.3" rx="4" />
+              <text x={x2 + barWidth/2} y="390" fontSize="12" fontWeight="bold" textAnchor="middle">+ Unconfirmed</text>
+              
+              <line x1={x2 + barWidth} y1={unconfirmedY} x2={x3} y2={unconfirmedY} stroke="#94a3b8" strokeWidth="2" strokeDasharray="3,3" />
+              
+              {exceeding ? (
+                <>
+                  <rect x={x3} y={unconfirmedY} width={barWidth} height={getHeight(excessValue)} fill="#d1fae5" stroke="#10b981" strokeWidth="2" strokeDasharray="4,4" rx="4" />
+                  <text x={x3 + barWidth/2} y={unconfirmedY - 8} fontSize="13" fontWeight="bold" fill="#10b981" textAnchor="middle">+{formatCurrency(excessValue)}</text>
+                  <rect x={x3} y={targetY} width={barWidth} height={targetHeight} fill="#10b981" opacity="0.2" rx="4" />
+                  <text x={x3 + barWidth/2} y="390" fontSize="12" fontWeight="bold" textAnchor="middle">Over Target</text>
+                </>
+              ) : (
+                <>
+                  <rect x={x3} y={unconfirmedY} width={barWidth} height={confirmedHeight + unconfirmedHeight} fill="#10b981" opacity="0.2" rx="4" />
+                  {gapValue > 0 && (
+                    <>
+                      <rect x={x3} y={gapY} width={barWidth} height={gapHeight} fill="#fee2e2" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,4" rx="4" />
+                      <text x={x3 + barWidth/2} y={gapY - 8} fontSize="13" fontWeight="bold" fill="#ef4444" textAnchor="middle">{formatCurrency(gapValue)}</text>
+                      <text x={x3 + barWidth/2} y={gapY - 22} fontSize="10" fill="#ef4444" textAnchor="middle">-{((gapValue / data.target) * 100).toFixed(1)}%</text>
+                    </>
+                  )}
+                  <text x={x3 + barWidth/2} y="390" fontSize="12" fontWeight="bold" textAnchor="middle">Gap</text>
+                </>
+              )}
+              
+              <line x1={x3 + barWidth} y1={exceeding ? unconfirmedY : targetY} x2={x4} y2={targetY} stroke="#94a3b8" strokeWidth="2" strokeDasharray="3,3" />
+              
+              <rect x={x4} y={targetY} width={barWidth} height={targetHeight} fill="none" stroke="#ef4444" strokeWidth="3" rx="4" />
+              <text x={x4 + barWidth/2} y={targetY - 8} fontSize="13" fontWeight="bold" fill="#ef4444" textAnchor="middle">{formatCurrency(data.target)}</text>
+              <text x={x4 + barWidth/2} y="390" fontSize="12" fontWeight="bold" textAnchor="middle">Target</text>
+              
+              <text x="45" y="45" fontSize="10" fill="#6b7280" textAnchor="end">{formatCurrency(maxValue)}</text>
+              <text x="45" y="365" fontSize="10" fill="#6b7280" textAnchor="end">$0</text>
+            </svg>
+          </div>
+        );
+      };
+
+      const getCurrentData = () => {
+        const office = teamData[selectedOffice];
+        if (!office) return [];
+        const teams = Object.keys(office).filter(key => key !== 'total');
+        return teams.map(teamKey => ({
+          key: teamKey,
+          name: office[teamKey].name,
+          data: office[teamKey][selectedMonth]
+        }));
+      };
+
+      const getOfficeTotal = () => {
+        const office = teamData[selectedOffice];
+        if (!office || !office.total) return null;
+        return { name: office.total.name, data: office.total[selectedMonth] };
+      };
+
+      const monthLabel = { dec: 'December', jan: 'January', feb: 'February', rolling: 'Rolling 3-Month (Dec-Feb)' };
+      const officeLabel = { melbourne: 'Melbourne', sydney: 'Sydney', brisbane: 'Brisbane', group: 'Group' };
+
+      const getMonthlyTrendData = () => {
+        const office = teamData[selectedOffice];
+        if (!office || !office.total) return [];
+        return [
+          { month: 'December', revenue: office.total.dec.total, target: office.total.dec.target, variance: office.total.dec.total - office.total.dec.target },
+          { month: 'January', revenue: office.total.jan.total, target: office.total.jan.target, variance: office.total.jan.total - office.total.jan.target },
+          { month: 'February', revenue: office.total.feb.total, target: office.total.feb.target, variance: office.total.feb.total - office.total.feb.target }
+        ];
+      };
+
+      const getTeamTrendData = () => {
+        if (selectedOffice !== 'melbourne') return null;
+        return [
+          { month: 'December', 'Dream Team': teamData.melbourne.dreamTeam.dec.total, 'Go-Getters': teamData.melbourne.goGetters.dec.total, 'Social & Content': teamData.melbourne.socialContent.dec.total },
+          { month: 'January', 'Dream Team': teamData.melbourne.dreamTeam.jan.total, 'Go-Getters': teamData.melbourne.goGetters.jan.total, 'Social & Content': teamData.melbourne.socialContent.jan.total },
+          { month: 'February', 'Dream Team': teamData.melbourne.dreamTeam.feb.total, 'Go-Getters': teamData.melbourne.goGetters.feb.total, 'Social & Content': teamData.melbourne.socialContent.feb.total }
+        ];
+      };
+
+      const getTopClients = () => {
+        const monthData = clientData[selectedMonth];
+        if (!monthData) return [];
+        if (selectedOffice === 'group') return monthData.group || [];
+        if (selectedOffice === 'melbourne') return monthData.melbourne || [];
+        if (selectedOffice === 'sydney') return monthData.sydney || [];
+        if (selectedOffice === 'brisbane') return monthData.brisbane || [];
+        return [];
+      };
+
+      const monthlyTrendData = getMonthlyTrendData();
+      const teamTrendData = getTeamTrendData();
+      const officeTotal = getOfficeTotal();
+
+      return (
+        <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 bg-gray-50 min-h-screen">
+          <div className="mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Rolling 3-Month Revenue Dashboard</h1>
+            <p className="text-gray-600">December (Current) + January + February (Forward Looking)</p>
+            <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-900"><strong>📊 Updated:</strong> {updateDate}</p>
+            </div>
+          </div>
+
+          <div className="mb-4 flex gap-2 flex-wrap">
+            {Object.keys(teamData).map(office => (
+              <button key={office} onClick={() => setSelectedOffice(office)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedOffice === office ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'}`}>
+                {officeLabel[office]}
+              </button>
+            ))}
+          </div>
+
+          <div className="mb-8 flex gap-2 flex-wrap">
+            {['dec', 'jan', 'feb', 'rolling'].map(month => (
+              <button key={month} onClick={() => setSelectedMonth(month)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedMonth === month ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'}`}>
+                {monthLabel[month]}
+              </button>
+            ))}
+          </div>
+
+          {officeTotal && (
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">{officeLabel[selectedOffice]} - {monthLabel[selectedMonth]}</h2>
+                  <div className="flex flex-wrap justify-center gap-6">
+                    <div><div className="text-sm text-gray-600">Target</div><div className="text-xl font-bold text-gray-900">{formatCurrency(officeTotal.data.target)}</div></div>
+                    <div><div className="text-sm text-gray-600">Confirmed</div><div className="text-xl font-bold text-green-600">{formatCurrency(officeTotal.data.confirmed)}</div></div>
+                    <div><div className="text-sm text-gray-600">Unconfirmed</div><div className="text-xl font-bold text-yellow-600">{formatCurrency(officeTotal.data.unconfirmed)}</div></div>
+                    <div><div className="text-sm text-gray-600">Variance</div><div className={`text-xl font-bold ${officeTotal.data.total >= officeTotal.data.target ? 'text-green-600' : 'text-red-600'}`}>{officeTotal.data.total >= officeTotal.data.target ? '+' : ''}{formatCurrency(officeTotal.data.total - officeTotal.data.target)}</div></div>
+                    <div><div className="text-sm text-gray-600">% Complete</div><div className={`text-xl font-bold ${((officeTotal.data.total) / officeTotal.data.target) >= 0.95 ? 'text-green-600' : ((officeTotal.data.total) / officeTotal.data.target) >= 0.85 ? 'text-yellow-600' : 'text-red-600'}`}>{(((officeTotal.data.total) / officeTotal.data.target) * 100).toFixed(1)}%</div></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="mb-6">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <h2 className="text-xl font-bold">3-Month Rolling Trend - {officeLabel[selectedOffice]}</h2>
+              <p className="text-blue-100 text-sm mt-1">December → January → February progression</p>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ResponsiveContainer width="100%" height={350}>
+                <ComposedChart data={monthlyTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={formatCurrency} />
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Legend />
+                  <Area type="monotone" dataKey="revenue" fill="#3b82f6" fillOpacity={0.3} stroke="#3b82f6" strokeWidth={3} name="Actual Revenue" />
+                  <Line type="monotone" dataKey="target" stroke="#ef4444" strokeWidth={3} strokeDasharray="5 5" name="Target" dot={{ r: 6 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {monthlyTrendData.map((month, idx) => (
+                  <div key={idx} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600 mb-1">{month.month}</div>
+                    <div className="text-xl font-bold text-blue-700">{formatCurrency(month.revenue)}</div>
+                    <div className="text-sm text-gray-500 mt-1">vs {formatCurrency(month.target)} target</div>
+                    <div className={`text-sm font-semibold mt-2 ${month.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {month.variance >= 0 ? '+' : ''}{formatCurrency(month.variance)} ({((month.variance / month.target) * 100).toFixed(1)}%)
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {officeTotal && (
+            <Card className="mb-6">
+              <CardHeader className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <h2 className="text-xl font-bold">{officeTotal.name} - {monthLabel[selectedMonth]}</h2>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${((officeTotal.data.total) / officeTotal.data.target) >= 0.95 ? 'bg-green-200 text-green-900' : ((officeTotal.data.total) / officeTotal.data.target) >= 0.85 ? 'bg-yellow-200 text-yellow-900' : 'bg-red-200 text-red-900'}`}>
+                    {(((officeTotal.data.total) / officeTotal.data.target) * 100).toFixed(1)}% Complete
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <WaterfallChart data={officeTotal.data} teamName={officeTotal.name} />
+                <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div><div className="text-gray-700">Confirmed:</div><div className="font-bold text-green-700">{formatCurrency(officeTotal.data.confirmed)}</div><div className="text-xs text-gray-600">{((officeTotal.data.confirmed / officeTotal.data.target) * 100).toFixed(1)}% of target</div></div>
+                    <div><div className="text-gray-700">Unconfirmed:</div><div className="font-bold text-yellow-700">{formatCurrency(officeTotal.data.unconfirmed)}</div><div className="text-xs text-gray-600">{officeTotal.data.unconfirmed > 0 ? ((officeTotal.data.unconfirmed / officeTotal.data.target) * 100).toFixed(1) + '% of target' : 'No unconfirmed'}</div></div>
+                    <div><div className="text-gray-700">Total Pipeline:</div><div className="font-bold text-blue-700">{formatCurrency(officeTotal.data.total)}</div><div className="text-xs text-gray-600">{((officeTotal.data.total / officeTotal.data.target) * 100).toFixed(1)}% of target</div></div>
+                    <div><div className="text-gray-700">Gap to Close:</div><div className={`font-bold ${officeTotal.data.total >= officeTotal.data.target ? 'text-green-700' : 'text-red-700'}`}>{officeTotal.data.total >= officeTotal.data.target ? 'EXCEEDED!' : formatCurrency(Math.max(0, officeTotal.data.target - officeTotal.data.total))}</div></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {getCurrentData().map(team => {
+            const total = team.data.confirmed + team.data.unconfirmed;
+            const pctComplete = (total / team.data.target) * 100;
+            return (
+              <Card key={team.key} className="mb-6">
+                <CardHeader className="bg-gradient-to-r from-green-600 to-teal-600 text-white">
+                  <div className="flex justify-between items-center flex-wrap gap-2">
+                    <h2 className="text-xl font-bold">{team.name}</h2>
+                    <div className="flex gap-4 text-sm">
+                      <span>Target: {formatCurrency(team.data.target)}</span>
+                      <span>|</span>
+                      <span className={pctComplete >= 95 ? 'text-green-200' : pctComplete >= 85 ? 'text-yellow-200' : 'text-red-200'}>{pctComplete.toFixed(1)}% Complete</span>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <WaterfallChart data={team.data} teamName={team.name} />
+                  <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div><div className="text-gray-600">Confirmed:</div><div className="font-bold text-green-700">{formatCurrency(team.data.confirmed)}</div></div>
+                      <div><div className="text-gray-600">Unconfirmed:</div><div className="font-bold text-yellow-700">{formatCurrency(team.data.unconfirmed)}</div></div>
+                      <div><div className="text-gray-600">Total Pipeline:</div><div className="font-bold text-blue-700">{formatCurrency(total)}</div></div>
+                      <div><div className="text-gray-600">Variance:</div><div className={`font-bold ${total >= team.data.target ? 'text-green-700' : 'text-red-700'}`}>{total >= team.data.target ? '+' : ''}{formatCurrency(total - team.data.target)}</div></div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {selectedOffice === 'melbourne' && teamTrendData && (
+            <Card className="mb-6">
+              <CardHeader className="bg-gradient-to-r from-orange-600 to-red-600 text-white">
+                <h2 className="text-xl font-bold">Melbourne Team 3-Month Trends</h2>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveContainer width="100%" height={350}>
+                  <LineChart data={teamTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis tickFormatter={formatCurrency} />
+                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <Legend />
+                    <Line type="monotone" dataKey="Dream Team" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5 }} />
+                    <Line type="monotone" dataKey="Go-Getters" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5 }} />
+                    <Line type="monotone" dataKey="Social & Content" stroke="#ec4899" strokeWidth={3} dot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="mb-6">
+            <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+              <h2 className="text-xl font-bold">Top 5 Clients - {officeLabel[selectedOffice]}</h2>
+              <p className="text-green-100 text-sm mt-1">{selectedMonth === 'rolling' ? 'Rolling 3-Month Revenue' : monthLabel[selectedMonth] + ' Revenue'}</p>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">Rank</th>
+                      <th className="px-4 py-3 text-left font-semibold">Client</th>
+                      <th className="px-4 py-3 text-left font-semibold">Team</th>
+                      <th className="px-4 py-3 text-right font-semibold">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getTopClients().map((client, idx) => (
+                      <tr key={idx} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-800' : idx === 1 ? 'bg-gray-200 text-gray-800' : idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-blue-50 text-blue-700'}`}>{idx + 1}</span>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-gray-900">{client.client}</td>
+                        <td className="px-4 py-3 text-gray-600 text-sm">{client.team}</td>
+                        <td className="px-4 py-3 text-right font-bold text-blue-700">{formatCurrency(client.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-blue-50 font-semibold">
+                    <tr>
+                      <td colSpan="3" className="px-4 py-3">Top 5 Total</td>
+                      <td className="px-4 py-3 text-right text-blue-700">{formatCurrency(getTopClients().reduce((sum, c) => sum + c.revenue, 0))}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
+              <h2 className="text-xl font-bold">Key Insights - {officeLabel[selectedOffice]}</h2>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {officeTotal && (() => {
+                const pct = (officeTotal.data.total / officeTotal.data.target) * 100;
+                const gap = Math.max(0, officeTotal.data.target - officeTotal.data.total);
+                return (
+                  <div className="space-y-4">
+                    {pct >= 95 ? (
+                      <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                        <h3 className="font-bold text-green-900 mb-2">✅ On Track</h3>
+                        <p className="text-green-800">{officeLabel[selectedOffice]} is at {pct.toFixed(1)}% of {monthLabel[selectedMonth]} target. Strong performance!</p>
+                      </div>
+                    ) : pct >= 80 ? (
+                      <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+                        <h3 className="font-bold text-yellow-900 mb-2">⚠️ Attention Needed</h3>
+                        <p className="text-yellow-800">{officeLabel[selectedOffice]} is at {pct.toFixed(1)}% of {monthLabel[selectedMonth]} target. Gap of {formatCurrency(gap)} to close.</p>
+                      </div>
+                    ) : (
+                      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                        <h3 className="font-bold text-red-900 mb-2">🔴 Critical Gap</h3>
+                        <p className="text-red-800">{officeLabel[selectedOffice]} is at {pct.toFixed(1)}% of {monthLabel[selectedMonth]} target. Significant gap of {formatCurrency(gap)} requires immediate action.</p>
+                      </div>
+                    )}
+                    {officeTotal.data.unconfirmed > 0 && (
+                      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <h3 className="font-bold text-blue-900 mb-2">📊 Pipeline Status</h3>
+                        <p className="text-blue-800">Unconfirmed pipeline of {formatCurrency(officeTotal.data.unconfirmed)} ({((officeTotal.data.unconfirmed / officeTotal.data.target) * 100).toFixed(1)}% of target). Focus on converting to confirmed revenue.</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </div>
+      );
     }
-    html += '<text x="' + (x2 + w/2) + '" y="360" font-size="12" font-weight="bold" text-anchor="middle">+ Unconfirmed</text>';
-    
-    // Connector line
-    html += '<line x1="' + (x2 + w) + '" y1="' + totalY + '" x2="' + x3 + '" y2="' + totalY + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>';
-    
-    // Gap or Excess bar
-    html += '<rect x="' + x3 + '" y="' + confirmedY + '" width="' + w + '" height="' + (confirmedH + unconfirmedH) + '" fill="#10b981" opacity="0.2" rx="4"/>';
-    if (exceeding) {
-        const excessVal = total - d.target;
-        const excessH = getH(excessVal);
-        html += '<rect x="' + x3 + '" y="' + totalY + '" width="' + w + '" height="' + excessH + '" fill="#d1fae5" stroke="#10b981" stroke-width="2" stroke-dasharray="4,4" rx="4"/>';
-        html += '<text x="' + (x3 + w/2) + '" y="' + (totalY - 8) + '" font-size="13" font-weight="bold" fill="#10b981" text-anchor="middle">+' + formatCurrency(excessVal) + '</text>';
-        html += '<text x="' + (x3 + w/2) + '" y="360" font-size="12" font-weight="bold" text-anchor="middle">Over Target</text>';
-    } else if (gapVal > 0) {
-        html += '<rect x="' + x3 + '" y="' + targetY + '" width="' + w + '" height="' + gapH + '" fill="#fee2e2" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,4" rx="4"/>';
-        html += '<text x="' + (x3 + w/2) + '" y="' + (targetY - 8) + '" font-size="13" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(gapVal) + '</text>';
-        html += '<text x="' + (x3 + w/2) + '" y="' + (targetY - 22) + '" font-size="10" fill="#ef4444" text-anchor="middle">-' + ((gapVal/d.target)*100).toFixed(1) + '%</text>';
-        html += '<text x="' + (x3 + w/2) + '" y="360" font-size="12" font-weight="bold" text-anchor="middle">Gap</text>';
-    }
-    
-    // Connector line
-    html += '<line x1="' + (x3 + w) + '" y1="' + targetY + '" x2="' + x4 + '" y2="' + targetY + '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3"/>';
-    
-    // Target bar
-    const targetH = getH(d.target);
-    html += '<rect x="' + x4 + '" y="' + targetY + '" width="' + w + '" height="' + targetH + '" fill="none" stroke="#ef4444" stroke-width="3" rx="4"/>';
-    html += '<text x="' + (x4 + w/2) + '" y="' + (targetY - 8) + '" font-size="13" font-weight="bold" fill="#ef4444" text-anchor="middle">' + formatCurrency(d.target) + '</text>';
-    html += '<text x="' + (x4 + w/2) + '" y="360" font-size="12" font-weight="bold" text-anchor="middle">Target</text>';
-    
-    // Y-axis labels
-    html += '<text x="55" y="55" font-size="10" fill="#6b7280" text-anchor="end">' + formatCurrency(maxVal) + '</text>';
-    html += '<text x="55" y="' + (50 + h + 5) + '" font-size="10" fill="#6b7280" text-anchor="end">$0</text>';
-    
-    svg.innerHTML = html;
-    container.appendChild(svg);
-}
 
-function updateDisplay() {
-    const d = getOfficeData();
-    if (!d) return;
-    
-    const officeNames = { melbourne: 'Melbourne', sydney: 'Sydney', brisbane: 'Brisbane', group: 'Group' };
-    const monthNames = { dec: 'December', jan: 'January', feb: 'February', rolling: 'Rolling 3-Month' };
-    const officeName = officeNames[currentOffice];
-    const monthName = monthNames[currentMonth];
-    
-    // Summary title
-    document.getElementById('summaryTitle').textContent = officeName + ' - ' + monthName;
-    document.getElementById('chartTitle').textContent = officeName + ' Revenue Waterfall - ' + monthName;
-    
-    // Complete badge
-    const pctComplete = ((d.confirmed + d.unconfirmed) / d.target * 100).toFixed(1);
-    const badge = document.getElementById('completeBadge');
-    badge.textContent = pctComplete + '% Complete';
-    badge.className = 'px-3 py-1 rounded-full text-sm font-medium ' + 
-        (pctComplete >= 95 ? 'bg-green-200 text-green-900' : pctComplete >= 80 ? 'bg-yellow-200 text-yellow-900' : 'bg-red-200 text-red-900');
-    
-    // Summary cards
-    const gap = Math.max(0, d.target - d.confirmed - d.unconfirmed);
-    const variance = d.total - d.target;
-    document.getElementById('summaryCards').innerHTML = 
-        '<div class="bg-gray-100 p-4 rounded-lg"><div class="text-sm text-gray-600">Target</div><div class="text-xl font-bold text-gray-900">' + formatCurrency(d.target) + '</div></div>' +
-        '<div class="bg-green-50 p-4 rounded-lg"><div class="text-sm text-gray-600">Confirmed</div><div class="text-xl font-bold text-green-600">' + formatCurrency(d.confirmed) + '</div><div class="text-xs text-gray-500">' + ((d.confirmed/d.target)*100).toFixed(1) + '%</div></div>' +
-        '<div class="bg-yellow-50 p-4 rounded-lg"><div class="text-sm text-gray-600">Unconfirmed</div><div class="text-xl font-bold text-yellow-600">' + formatCurrency(d.unconfirmed) + '</div><div class="text-xs text-gray-500">' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%</div></div>' +
-        '<div class="' + (gap > 0 ? 'bg-red-50' : 'bg-green-50') + ' p-4 rounded-lg"><div class="text-sm text-gray-600">' + (gap > 0 ? 'Gap' : 'Surplus') + '</div><div class="text-xl font-bold ' + (gap > 0 ? 'text-red-600' : 'text-green-600') + '">' + formatCurrency(gap > 0 ? gap : -variance) + '</div></div>' +
-        '<div class="bg-blue-50 p-4 rounded-lg"><div class="text-sm text-gray-600">Variance</div><div class="text-xl font-bold ' + (variance >= 0 ? 'text-green-600' : 'text-red-600') + '">' + (variance >= 0 ? '+' : '') + formatCurrency(variance) + '</div></div>';
-    
-    // Waterfall breakdown
-    document.getElementById('waterfallBreakdown').innerHTML = 
-        '<div><div class="text-gray-700">Confirmed:</div><div class="font-bold text-green-700">' + formatCurrency(d.confirmed) + ' (' + ((d.confirmed/d.target)*100).toFixed(1) + '%)</div></div>' +
-        '<div><div class="text-gray-700">Unconfirmed:</div><div class="font-bold text-yellow-700">' + formatCurrency(d.unconfirmed) + ' (' + ((d.unconfirmed/d.target)*100).toFixed(1) + '%)</div></div>' +
-        '<div><div class="text-gray-700">Total Pipeline:</div><div class="font-bold text-blue-700">' + formatCurrency(d.total) + ' (' + ((d.total/d.target)*100).toFixed(1) + '%)</div></div>' +
-        '<div><div class="text-gray-700">Gap to Close:</div><div class="font-bold ' + (gap > 0 ? 'text-red-700' : 'text-green-700') + '">' + (gap > 0 ? formatCurrency(gap) : 'EXCEEDED!') + '</div></div>';
-    
-    // Draw waterfall
-    drawWaterfall(d);
-    
-    // Team breakdown (Melbourne only)
-    const teamSection = document.getElementById('teamBreakdown');
-    if (currentOffice === 'melbourne') {
-        teamSection.style.display = 'block';
-        const teams = [['dreamTeam', 'Dream Team'], ['goGetters', 'Go-Getters'], ['socialContent', 'Social & Content']];
-        let tableHtml = '<thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left">Team</th><th class="px-4 py-3 text-right">Target</th><th class="px-4 py-3 text-right">Confirmed</th><th class="px-4 py-3 text-right">Unconf.</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3 text-right">Gap</th><th class="px-4 py-3 text-center">%</th></tr></thead><tbody>';
-        
-        teams.forEach(([key, name]) => {
-            const td = data.melbourne[key]?.[currentMonth];
-            if (!td) return;
-            const tGap = Math.max(0, td.target - td.total);
-            const tPct = ((td.total / td.target) * 100).toFixed(0);
-            const badge = tPct >= 95 ? 'bg-green-100 text-green-800' : tPct >= 80 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
-            tableHtml += '<tr class="border-b"><td class="px-4 py-3 font-medium">' + name + '</td><td class="px-4 py-3 text-right">' + formatCurrency(td.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(td.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(td.unconfirmed) + '</td><td class="px-4 py-3 text-right font-medium">' + formatCurrency(td.total) + '</td><td class="px-4 py-3 text-right text-red-600">' + formatCurrency(tGap) + '</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ' + badge + '">' + tPct + '%</span></td></tr>';
-        });
-        
-        tableHtml += '<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">TOTAL</td><td class="px-4 py-3 text-right">' + formatCurrency(d.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(d.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(d.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(d.total) + '</td><td class="px-4 py-3 text-right text-red-700">' + formatCurrency(gap) + '</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">' + pctComplete + '%</span></td></tr></tbody>';
-        document.getElementById('teamTable').innerHTML = tableHtml;
-    } else {
-        teamSection.style.display = 'none';
-    }
-    
-    // Top 5 Clients
-    document.getElementById('clientsTitle').textContent = 'Top 5 Clients - ' + officeName + ' (' + monthName + ')';
-    const clientKey = currentOffice === 'group' ? 'group' : currentOffice === 'melbourne' ? 'melbourne' : currentOffice;
-    const clients = topClientsData[currentMonth]?.[clientKey] || [];
-    let clientsHtml = '<thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left">#</th><th class="px-4 py-3 text-left">Client</th><th class="px-4 py-3 text-left">Team</th><th class="px-4 py-3 text-right">Revenue</th></tr></thead><tbody>';
-    clients.forEach((c, i) => {
-        const rankBg = i === 0 ? 'bg-yellow-100 text-yellow-800' : i === 1 ? 'bg-gray-200 text-gray-800' : i === 2 ? 'bg-orange-100 text-orange-800' : 'bg-blue-50 text-blue-700';
-        clientsHtml += '<tr class="border-b"><td class="px-4 py-3"><span class="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ' + rankBg + '">' + (i+1) + '</span></td><td class="px-4 py-3 font-semibold">' + c.client + '</td><td class="px-4 py-3 text-gray-600">' + c.team + '</td><td class="px-4 py-3 text-right font-bold text-blue-700">' + formatCurrency(c.revenue) + '</td></tr>';
-    });
-    const clientTotal = clients.reduce((sum, c) => sum + c.revenue, 0);
-    clientsHtml += '<tr class="bg-blue-50 font-bold"><td colspan="3" class="px-4 py-3">Top 5 Total</td><td class="px-4 py-3 text-right text-blue-700">' + formatCurrency(clientTotal) + '</td></tr></tbody>';
-    document.getElementById('clientsTable').innerHTML = clientsHtml;
-    
-    // Office comparison (Group only)
-    const officeSection = document.getElementById('officeComparison');
-    if (currentOffice === 'group') {
-        officeSection.style.display = 'block';
-        let officeHtml = '<thead class="bg-gray-100"><tr><th class="px-4 py-3 text-left">Office</th><th class="px-4 py-3 text-right">Target</th><th class="px-4 py-3 text-right">Confirmed</th><th class="px-4 py-3 text-right">Unconf.</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3 text-center">%</th></tr></thead><tbody>';
-        
-        ['melbourne', 'sydney', 'brisbane'].forEach(office => {
-            const od = data[office]?.total?.[currentMonth];
-            if (!od) return;
-            const oPct = ((od.total / od.target) * 100).toFixed(0);
-            const badge = oPct >= 95 ? 'bg-green-100 text-green-800' : oPct >= 80 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
-            officeHtml += '<tr class="border-b"><td class="px-4 py-3 font-medium capitalize">' + office + '</td><td class="px-4 py-3 text-right">' + formatCurrency(od.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(od.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(od.unconfirmed) + '</td><td class="px-4 py-3 text-right font-medium">' + formatCurrency(od.total) + '</td><td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-sm ' + badge + '">' + oPct + '%</span></td></tr>';
-        });
-        
-        officeHtml += '<tr class="bg-blue-50 font-bold"><td class="px-4 py-3">GROUP TOTAL</td><td class="px-4 py-3 text-right">' + formatCurrency(d.target) + '</td><td class="px-4 py-3 text-right text-green-700">' + formatCurrency(d.confirmed) + '</td><td class="px-4 py-3 text-right text-yellow-700">' + formatCurrency(d.unconfirmed) + '</td><td class="px-4 py-3 text-right">' + formatCurrency(d.total) + '</td><td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">' + pctComplete + '%</span></td></tr></tbody>';
-        document.getElementById('officeTable').innerHTML = officeHtml;
-    } else {
-        officeSection.style.display = 'none';
-    }
-    
-    // Key Insights
-    let insightsHtml = '';
-    const pct = parseFloat(pctComplete);
-    
-    if (pct >= 95) {
-        insightsHtml += '<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded mb-4"><h3 class="font-bold text-green-900 mb-2">✅ On Track</h3><p class="text-green-800">' + officeName + ' is at ' + pctComplete + '% of ' + monthName + ' target. Strong performance!</p></div>';
-    } else if (pct >= 80) {
-        insightsHtml += '<div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded mb-4"><h3 class="font-bold text-yellow-900 mb-2">⚠️ Attention Needed</h3><p class="text-yellow-800">' + officeName + ' is at ' + pctComplete + '% of ' + monthName + ' target. Gap of ' + formatCurrency(gap) + ' to close.</p></div>';
-    } else {
-        insightsHtml += '<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-4"><h3 class="font-bold text-red-900 mb-2">🔴 Critical Gap</h3><p class="text-red-800">' + officeName + ' is at ' + pctComplete + '% of ' + monthName + ' target. Significant gap of ' + formatCurrency(gap) + ' requires immediate action.</p></div>';
-    }
-    
-    if (d.unconfirmed > 0) {
-        insightsHtml += '<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded"><h3 class="font-bold text-blue-900 mb-2">📊 Pipeline Status</h3><p class="text-blue-800">Unconfirmed pipeline of ' + formatCurrency(d.unconfirmed) + ' (' + ((d.unconfirmed/d.target)*100).toFixed(1) + '% of target). Focus on converting to confirmed revenue.</p></div>';
-    }
-    
-    document.getElementById('insights').innerHTML = insightsHtml;
-}
-
-// Initialize
-updateDisplay();
+    ReactDOM.createRoot(document.getElementById('app')).render(<Rolling3MonthDashboard />);
     </script>
 </body>
 </html>
